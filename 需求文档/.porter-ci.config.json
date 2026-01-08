@@ -1,0 +1,19 @@
+{
+  "projectName": "porter-ci",
+  "targetProjects": [
+    {
+      "projectName": "porter-ci-A",
+      "projectPath": "/Users/dingtiancheng/Desktop/project/porter-ci-A",
+      "branch": "feat"
+    }
+  ],
+  "log": [
+    {
+      "time": "2023-12-12 12:00:00",
+      "projectName": "porter-ci-A",
+      "branch": "feat",
+      "commit": "1234567890",
+      "commit-message": "feat: add feature A"
+    }
+  ]
+}
