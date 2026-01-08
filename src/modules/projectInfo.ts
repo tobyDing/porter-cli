@@ -21,14 +21,18 @@ function parseCommits(commitLines: string[]): GitCommit[] {
 /**
  * 读取指定项目的项目信息
  * @param projectPath 项目目录路径
+ * @param projectName 项目名称（可选）
+ * @param sinceCommit 起始提交ID（可选）
  * @returns 项目信息
  */
 export async function readProjectInfo(
-  projectPath: string
+  projectPath: string,
+  projectName?: string,
+  sinceCommit?: string
 ): Promise<ProjectInfo> {
-  const name = await getProjectName(projectPath);
+  const name = projectName || (await getProjectName(projectPath));
   const branch = getCurrentBranch(projectPath);
-  const commitLines = getCommits(projectPath);
+  const commitLines = getCommits(projectPath, sinceCommit);
   const commits = parseCommits(commitLines);
 
   return {

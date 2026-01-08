@@ -61,7 +61,11 @@ async function main() {
 
     const config = await readAndValidateConfig();
 
-    const projectInfo = await readProjectInfo(config.projectPath);
+    const projectInfo = await readProjectInfo(
+      config.projectPath,
+      config.projectName,
+      config["commit-id"]
+    );
 
     const isProjectInfoConfirmed = await confirmProjectInfo(projectInfo);
     if (!isProjectInfoConfirmed) {
@@ -73,11 +77,7 @@ async function main() {
 
     checkForNewCommits(projectInfo.commits);
 
-    const shouldCreateConfig = await askToCreateConfig();
-    if (shouldCreateConfig) {
-      await handleConfigCreation(config.projectPath);
-      return;
-    }
+    // 已找到配置文件，跳过创建配置文件的询问
 
     const shouldStartSync = await askToStartSync();
     if (!shouldStartSync) {

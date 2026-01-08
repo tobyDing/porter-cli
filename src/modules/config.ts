@@ -121,8 +121,16 @@ export async function readAndValidateConfig(): Promise<PorterConfig> {
  */
 export async function createDefaultConfig(projectPath: string): Promise<void> {
   const defaultConfig: PorterConfig = {
-    projectPath,
-    targetProjects: [],
+    projectName: "源项目名称",
+    projectPath: projectPath,
+    "commit-id": "上次同步的 commit-id或者需要从哪个 commit 开始同步",
+    targetProjects: [
+      {
+        projectName: "目标项目名称",
+        projectPath: "目标项目路径",
+        branch: "目标分支名称",
+      },
+    ],
   };
 
   const filePath = getConfigFilePath();
@@ -133,7 +141,7 @@ export async function createDefaultConfig(projectPath: string): Promise<void> {
       "utf-8"
     );
     console.log(`默认配置文件已创建：${filePath}`);
-    console.log("请编辑该文件并添加目标项目配置。");
+    console.log("请编辑该文件并添加正确的项目配置。");
   } catch (error) {
     throw new Error(`创建默认配置文件失败：${(error as Error).message}`);
   }

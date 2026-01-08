@@ -24,10 +24,7 @@ export function executeGitCommand(
  * @param cwd 执行目录
  * @returns 命令执行结果
  */
-export function executeGitCommandInDir(
-  command: string,
-  cwd: string
-): string {
+export function executeGitCommandInDir(command: string, cwd: string): string {
   try {
     const options: ExecSyncOptions = {
       cwd: path.isAbsolute(cwd) ? cwd : path.resolve(process.cwd(), cwd),
@@ -35,7 +32,9 @@ export function executeGitCommandInDir(
     return execSync(`git ${command}`, options).toString().trim();
   } catch (error) {
     throw new Error(
-      `Git命令执行失败: ${command}\n在目录 ${cwd} 中执行失败：${(error as Error).message}`
+      `Git命令执行失败: ${command}\n在目录 ${cwd} 中执行失败：${
+        (error as Error).message
+      }`
     );
   }
 }
@@ -57,7 +56,10 @@ export async function getProjectName(projectPath: string): Promise<string> {
     const packageData = JSON.parse(packageJson);
     return packageData.name;
   } catch {
-    const remoteUrl = executeGitCommandInDir("config --get remote.origin.url", absolutePath);
+    const remoteUrl = executeGitCommandInDir(
+      "config --get remote.origin.url",
+      absolutePath
+    );
     return remoteUrl.split("/").pop()?.replace(".git", "") || "unknown";
   }
 }
@@ -77,14 +79,17 @@ export function getCurrentBranch(projectPath: string): string {
  * @param sinceCommit 起始提交ID（可选）
  * @returns 提交记录数组
  */
-export function getCommits(projectPath: string, sinceCommit?: string): string[] {
+export function getCommits(
+  projectPath: string,
+  sinceCommit?: string
+): string[] {
   const absolutePath = path.isAbsolute(projectPath)
     ? projectPath
     : path.resolve(process.cwd(), projectPath);
 
   const command = sinceCommit
-    ? `log ${sinceCommit}..HEAD --oneline`
-    : "log --oneline";
+    ? `log ${sinceCommit}^..HEAD --format="%H %s"`
+    : `log --format="%H %s"`;
 
   const commitsOutput = executeGitCommandInDir(command, absolutePath);
   return commitsOutput ? commitsOutput.split("\n") : [];
@@ -103,10 +108,10 @@ export function withWorkingDirectory<T>(
   const absolutePath = path.isAbsolute(projectPath)
     ? projectPath
     : path.resolve(process.cwd(), projectPath);
-  
+
   const originalDir = process.cwd();
   process.chdir(absolutePath);
-  
+
   try {
     return callback();
   } finally {

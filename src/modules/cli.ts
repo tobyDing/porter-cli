@@ -1,15 +1,15 @@
-import inquirer from 'inquirer';
-import { ProjectInfo } from '../types';
-import { createDefaultConfig } from './config';
+import inquirer from "inquirer";
+import { ProjectInfo } from "../types";
+import { createDefaultConfig } from "./config";
 
 /**
  * 显示欢迎信息
  */
 export function showWelcome(): void {
-  console.log('====================================');
-  console.log('          Porter-CI 工具');
-  console.log('  基于git cherry-pick实现跨项目代码同步');
-  console.log('====================================\n');
+  console.log("====================================");
+  console.log("          Porter-CI 工具");
+  console.log("  基于git cherry-pick实现跨项目代码同步");
+  console.log("====================================\n");
 }
 
 /**
@@ -17,20 +17,22 @@ export function showWelcome(): void {
  * @param projectInfo 源项目信息
  * @returns 用户是否确认
  */
-export async function confirmProjectInfo(projectInfo: ProjectInfo): Promise<boolean> {
+export async function confirmProjectInfo(
+  projectInfo: ProjectInfo
+): Promise<boolean> {
   console.log(`源项目名称：${projectInfo.name}`);
   console.log(`源项目分支：${projectInfo.branch}`);
-  console.log(`提交记录数量：${projectInfo.commits.length}`);
-  
+  console.log(`待同步的提交记录数量：${projectInfo.commits.length}`);
+
   const answers = await inquirer.prompt([
     {
-      type: 'confirm',
-      name: 'confirm',
-      message: '确认以上源项目信息正确吗？',
-      default: true
-    }
+      type: "confirm",
+      name: "confirm",
+      message: "确认以上源项目信息正确吗？",
+      default: true,
+    },
   ]);
-  
+
   return answers.confirm;
 }
 
@@ -41,13 +43,13 @@ export async function confirmProjectInfo(projectInfo: ProjectInfo): Promise<bool
 export async function askToCreateConfig(): Promise<boolean> {
   const answers = await inquirer.prompt([
     {
-      type: 'confirm',
-      name: 'createConfig',
-      message: '是否需要创建或编辑配置文件？',
-      default: false
-    }
+      type: "confirm",
+      name: "createConfig",
+      message: "是否需要创建或编辑配置文件？",
+      default: false,
+    },
   ]);
-  
+
   return answers.createConfig;
 }
 
@@ -58,13 +60,13 @@ export async function askToCreateConfig(): Promise<boolean> {
 export async function askToStartSync(): Promise<boolean> {
   const answers = await inquirer.prompt([
     {
-      type: 'confirm',
-      name: 'startSync',
-      message: '是否开始同步代码？',
-      default: true
-    }
+      type: "confirm",
+      name: "startSync",
+      message: "是否开始同步代码？",
+      default: true,
+    },
   ]);
-  
+
   return answers.startSync;
 }
 
@@ -74,5 +76,5 @@ export async function askToStartSync(): Promise<boolean> {
  */
 export async function handleConfigCreation(projectPath: string): Promise<void> {
   await createDefaultConfig(projectPath);
-  console.log('配置文件已创建，请编辑后重新运行porter-ci工具。');
+  console.log("配置文件已创建，请编辑后重新运行porter-ci工具。");
 }
