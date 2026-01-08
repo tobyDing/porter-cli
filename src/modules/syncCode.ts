@@ -78,20 +78,8 @@ export function syncCode(projectInfo: ProjectInfo, config: PorterConfig): void {
   console.log(`源分支：${projectInfo.branch}`);
   console.log(`要同步的提交数量：${projectInfo.commits.length}`);
 
-  // 从配置中获取起始提交ID
-  const startCommitId = config["commit-id"];
-
-  // 筛选需要同步的提交
-  let commitsToSync = projectInfo.commits;
-  if (startCommitId) {
-    const startIndex = commitsToSync.findIndex(
-      (commit) => commit.id === startCommitId
-    );
-    if (startIndex !== -1) {
-      // 从起始提交ID的下一个提交开始同步
-      commitsToSync = commitsToSync.slice(0, startIndex);
-    }
-  }
+  // 提交记录已经在readProjectInfo中过滤过了
+  const commitsToSync = projectInfo.commits;
 
   if (commitsToSync.length === 0) {
     console.log("没有需要同步的提交。");
@@ -103,8 +91,8 @@ export function syncCode(projectInfo: ProjectInfo, config: PorterConfig): void {
     console.log(`${index + 1}. ${commit.id}: ${commit.message}`);
   });
 
-  // 获取提交ID列表
-  const commitIds = commitsToSync.map((commit) => commit.id);
+  // 获取提交ID列表，并反转顺序（从旧到新）
+  const commitIds = commitsToSync.map((commit) => commit.id).reverse();
 
   // 同步到每个目标项目
   for (const targetProject of config.targetProjects) {
