@@ -1,6 +1,7 @@
 import { execSync } from "node:child_process";
 import { ProjectInfo } from "../types";
 import { PorterConfig, TargetProject } from "../types";
+import { isSameGitRepository } from "../utils/git";
 
 /**
  * 执行命令并处理输出
@@ -39,25 +40,82 @@ export function syncToTargetProject(
     // 切换到目标分支
     executeCommand(`git checkout ${targetProject.branch}`);
 
-    // 执行git cherry-pick
-    const cherryPickCommand = `git cherry-pick ${commitIds.join(" ")}`;
-    console.log(`执行命令：${cherryPickCommand}`);
+    // 检查源项目和目标项目是否属于同一个Git仓库
+    const isCrossProject = !isSameGitRepository(
+      process.env.PORTER_SOURCE_PROJECT_PATH || "",
+      targetProject.projectPath
+    );
 
-    try {
-      executeCommand(cherryPickCommand);
-      console.log(`✅ 成功同步到项目：${targetProject.projectName}`);
-    } catch (error) {
-      // 检查是否是冲突错误
-      const errorMessage = (error as Error).message;
-      if (errorMessage.includes("CONFLICT")) {
-        console.log(
-          `⚠️  项目 ${targetProject.projectName} 同步时发生冲突，请手动解决冲突。`
-        );
-        console.log(
-          `解决冲突后，请在目标项目目录执行 git cherry-pick --continue 完成同步。`
-        );
-      } else {
-        throw error;
+    console.log(`是否跨项目同步：${isCrossProject}`);
+
+    // 执行git cherry-pick
+    if (isCrossProject) {
+      // 跨项目同步：添加源项目作为临时远程仓库
+      const tempRemoteName = `temp_porter_${Date.now()}`;
+      const sourceProjectPath = process.env.PORTER_SOURCE_PROJECT_PATH || "";
+
+      try {
+        // 添加源项目作为远程仓库
+        console.log(`添加源项目作为临时远程仓库：${tempRemoteName}`);
+        executeCommand(`git remote add ${tempRemoteName} ${sourceProjectPath}`);
+
+        // 获取源项目的提交历史
+        console.log(`获取源项目的提交历史...`);
+        executeCommand(`git fetch ${tempRemoteName}`);
+
+        // 执行git cherry-pick
+        const cherryPickCommand = `git cherry-pick ${commitIds.join(" ")}`;
+        console.log(`执行命令：${cherryPickCommand}`);
+
+        try {
+          executeCommand(cherryPickCommand);
+          console.log(`✅ 成功同步到项目：${targetProject.projectName}`);
+        } catch (error) {
+          // 检查是否是冲突错误
+          const errorMessage = (error as Error).message;
+          if (errorMessage.includes("CONFLICT")) {
+            console.log(
+              `⚠️  项目 ${targetProject.projectName} 同步时发生冲突，请手动解决冲突。`
+            );
+            console.log(
+              `解决冲突后，请在目标项目目录执行 git cherry-pick --continue 完成同步。`
+            );
+          } else {
+            throw error;
+          }
+        }
+      } finally {
+        // 清理：移除临时远程仓库
+        try {
+          executeCommand(`git remote remove ${tempRemoteName}`);
+          console.log(`移除临时远程仓库：${tempRemoteName}`);
+        } catch (cleanupError) {
+          console.log(
+            `清理临时远程仓库时发生错误：${(cleanupError as Error).message}`
+          );
+        }
+      }
+    } else {
+      // 同项目同步：直接执行cherry-pick
+      const cherryPickCommand = `git cherry-pick ${commitIds.join(" ")}`;
+      console.log(`执行命令：${cherryPickCommand}`);
+
+      try {
+        executeCommand(cherryPickCommand);
+        console.log(`✅ 成功同步到项目：${targetProject.projectName}`);
+      } catch (error) {
+        // 检查是否是冲突错误
+        const errorMessage = (error as Error).message;
+        if (errorMessage.includes("CONFLICT")) {
+          console.log(
+            `⚠️  项目 ${targetProject.projectName} 同步时发生冲突，请手动解决冲突。`
+          );
+          console.log(
+            `解决冲突后，请在目标项目目录执行 git cherry-pick --continue 完成同步。`
+          );
+        } else {
+          throw error;
+        }
       }
     }
   } finally {
@@ -77,6 +135,10 @@ export function syncCode(projectInfo: ProjectInfo, config: PorterConfig): void {
   console.log(`源项目：${projectInfo.name}`);
   console.log(`源分支：${projectInfo.branch}`);
   console.log(`要同步的提交数量：${projectInfo.commits.length}`);
+  console.log(`源项目路径：${config.projectPath}`);
+
+  // 设置源项目路径到环境变量，供syncToTargetProject函数使用
+  process.env.PORTER_SOURCE_PROJECT_PATH = config.projectPath;
 
   // 提交记录已经在readProjectInfo中过滤过了
   const commitsToSync = projectInfo.commits;
@@ -107,6 +169,9 @@ export function syncCode(projectInfo: ProjectInfo, config: PorterConfig): void {
       // 继续同步其他项目
     }
   }
+
+  // 清理环境变量
+  delete process.env.PORTER_SOURCE_PROJECT_PATH;
 
   console.log(`\n=== 代码同步完成 ===`);
   console.log(`请检查目标项目的同步结果，如有冲突请手动解决。`);
