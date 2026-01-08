@@ -12,20 +12,23 @@ function parseCommits(commitLines: string[]): GitCommit[] {
     return {
       id,
       message: messageParts.join(" "),
-      author: "", // 简化实现，实际项目中可以通过git log --pretty=format:"%an"获取
-      date: "", // 简化实现，实际项目中可以通过git log --pretty=format:"%ad"获取
+      author: "",
+      date: "",
     };
   });
 }
 
 /**
- * 读取当前项目的信息
+ * 读取指定项目的项目信息
+ * @param projectPath 项目目录路径
  * @returns 项目信息
  */
-export async function readProjectInfo(): Promise<ProjectInfo> {
-  const name = await getProjectName();
-  const branch = getCurrentBranch();
-  const commitLines = getCommits();
+export async function readProjectInfo(
+  projectPath: string
+): Promise<ProjectInfo> {
+  const name = await getProjectName(projectPath);
+  const branch = getCurrentBranch(projectPath);
+  const commitLines = getCommits(projectPath);
   const commits = parseCommits(commitLines);
 
   return {
@@ -43,7 +46,7 @@ export async function readProjectInfo(): Promise<ProjectInfo> {
 export function checkForNewCommits(commits: GitCommit[]): void {
   if (commits.length === 0) {
     throw new Error(
-      "当前项目分支自创建以来没有新增的提交，请先提交代码后再使用porter-ci工具。"
+      "源项目分支自创建以来没有新增的提交，请先提交代码后再使用porter-ci工具。"
     );
   }
 }
