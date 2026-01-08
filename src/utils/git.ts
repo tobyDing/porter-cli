@@ -96,6 +96,36 @@ export function getCommits(
 }
 
 /**
+ * 获取指定目录所属的Git仓库根目录
+ * @param projectPath 项目目录路径
+ * @returns Git仓库根目录路径
+ */
+export function getGitRoot(projectPath: string): string {
+  const absolutePath = path.isAbsolute(projectPath)
+    ? projectPath
+    : path.resolve(process.cwd(), projectPath);
+
+  return executeGitCommandInDir("rev-parse --show-toplevel", absolutePath);
+}
+
+/**
+ * 判断两个项目路径是否属于同一个Git仓库
+ * @param path1 第一个项目路径
+ * @param path2 第二个项目路径
+ * @returns 如果属于同一个Git仓库返回true，否则返回false
+ */
+export function isSameGitRepository(path1: string, path2: string): boolean {
+  try {
+    const gitRoot1 = getGitRoot(path1);
+    const gitRoot2 = getGitRoot(path2);
+    return gitRoot1 === gitRoot2;
+  } catch (error) {
+    // 如果任一路径不是Git仓库，则它们肯定不是同一个仓库
+    return false;
+  }
+}
+
+/**
  * 切换到指定目录执行操作（临时更改工作目录）
  * @param projectPath 项目目录路径
  * @param callback 回调函数
