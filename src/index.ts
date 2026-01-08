@@ -10,51 +10,81 @@ import {
   checkForNewCommits,
   checkBranchName,
 } from "./modules/projectInfo";
-import { readAndValidateConfig } from "./modules/config";
+import { readAndValidateConfig, setConfigFilePath } from "./modules/config";
 import { syncCode } from "./modules/syncCode";
+import path from "node:path";
+import fs from "node:fs/promises";
+
+/**
+ * 查找配置文件
+ * @returns 配置文件路径，如果未找到则返回null
+ */
+async function findConfigFile(): Promise<string | null> {
+  const possiblePaths = [
+    ".porter-ci.config.json",
+    path.join(process.cwd(), ".porter-ci.config.json"),
+  ];
+
+  for (const configPath of possiblePaths) {
+    try {
+      await fs.access(configPath);
+      return configPath;
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
 
 /**
  * 主函数
  */
 async function main() {
   try {
-    // 1. 显示欢迎信息
     showWelcome();
 
-    // 2. 读取项目信息
-    const projectInfo = await readProjectInfo();
+    const configPath = await findConfigFile();
 
-    // 3. 确认项目信息
+    if (!configPath) {
+      console.log("未找到配置文件 .porter-ci.config.json");
+      console.log("请在当前目录或指定路径创建配置文件。");
+      const shouldCreate = await askToCreateConfig();
+      if (shouldCreate) {
+        await handleConfigCreation("./");
+      }
+      return;
+    }
+
+    setConfigFilePath(configPath);
+    console.log(`使用配置文件：${configPath}`);
+
+    const config = await readAndValidateConfig();
+
+    const projectInfo = await readProjectInfo(config.projectPath);
+
     const isProjectInfoConfirmed = await confirmProjectInfo(projectInfo);
     if (!isProjectInfoConfirmed) {
       console.log("操作已取消。");
       return;
     }
 
-    // 4. 检查分支名称
     checkBranchName(projectInfo.branch);
 
-    // 5. 检查是否有新提交
     checkForNewCommits(projectInfo.commits);
 
-    // 6. 询问是否创建配置文件
     const shouldCreateConfig = await askToCreateConfig();
     if (shouldCreateConfig) {
-      await handleConfigCreation(projectInfo.name);
+      await handleConfigCreation(config.projectPath);
       return;
     }
 
-    // 7. 读取并验证配置文件
-    const config = await readAndValidateConfig();
-
-    // 8. 询问是否启动同步
     const shouldStartSync = await askToStartSync();
     if (!shouldStartSync) {
       console.log("操作已取消。");
       return;
     }
 
-    // 9. 执行代码同步
     syncCode(projectInfo, config);
   } catch (error) {
     console.error(`❌ 错误：${(error as Error).message}`);
@@ -62,5 +92,4 @@ async function main() {
   }
 }
 
-// 启动程序
 main();

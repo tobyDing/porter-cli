@@ -13,20 +13,20 @@ export function showWelcome(): void {
 }
 
 /**
- * 确认项目信息
- * @param projectInfo 项目信息
+ * 确认源项目信息
+ * @param projectInfo 源项目信息
  * @returns 用户是否确认
  */
 export async function confirmProjectInfo(projectInfo: ProjectInfo): Promise<boolean> {
-  console.log(`当前项目：${projectInfo.name}`);
-  console.log(`当前分支：${projectInfo.branch}`);
+  console.log(`源项目名称：${projectInfo.name}`);
+  console.log(`源项目分支：${projectInfo.branch}`);
   console.log(`提交记录数量：${projectInfo.commits.length}`);
   
   const answers = await inquirer.prompt([
     {
       type: 'confirm',
       name: 'confirm',
-      message: '确认以上信息正确吗？',
+      message: '确认以上源项目信息正确吗？',
       default: true
     }
   ]);
@@ -70,9 +70,9 @@ export async function askToStartSync(): Promise<boolean> {
 
 /**
  * 处理配置文件创建
- * @param projectName 项目名称
+ * @param projectPath 源项目目录路径
  */
-export async function handleConfigCreation(projectName: string): Promise<void> {
-  await createDefaultConfig(projectName);
+export async function handleConfigCreation(projectPath: string): Promise<void> {
+  await createDefaultConfig(projectPath);
   console.log('配置文件已创建，请编辑后重新运行porter-ci工具。');
 }
