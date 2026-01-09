@@ -311,5 +311,7 @@ export async function syncCode(
   console.log(`1. porter 只负责代码的同步，不负责 git commit 和推送远程分支。`);
   console.log(`2. 请在目标项目中手动确认代码是否正确。`);
   console.log(`3. 确认无误后，请执行 git commit 和 git push 完成代码提交。`);
-  console.log(`\n感谢使用 porter！`);
+  console.log(`==============================================`);
+  console.log(`\n感谢使用 porter！\n`);
+  console.log(`==============================================`);
 }

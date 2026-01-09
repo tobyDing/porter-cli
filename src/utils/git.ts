@@ -147,6 +147,50 @@ export function isSameGitRepository(path1: string, path2: string): boolean {
 }
 
 /**
+ * 检查指定目录下的分支是否存在
+ * @param projectPath 项目目录路径
+ * @param branchName 分支名称
+ * @returns 如果分支存在返回true，否则返回false
+ */
+export function checkBranchExists(
+  projectPath: string,
+  branchName: string
+): boolean {
+  const absolutePath = path.isAbsolute(projectPath)
+    ? projectPath
+    : path.resolve(process.cwd(), projectPath);
+
+  try {
+    executeGitCommandInDir(`show-ref refs/heads/${branchName}`, absolutePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 检查指定目录下的commit-id是否存在
+ * @param projectPath 项目目录路径
+ * @param commitId commit-id
+ * @returns 如果commit-id存在返回true，否则返回false
+ */
+export function checkCommitIdExists(
+  projectPath: string,
+  commitId: string
+): boolean {
+  const absolutePath = path.isAbsolute(projectPath)
+    ? projectPath
+    : path.resolve(process.cwd(), projectPath);
+
+  try {
+    executeGitCommandInDir(`cat-file -e ${commitId}`, absolutePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * 切换到指定目录执行操作（临时更改工作目录）
  * @param projectPath 项目目录路径
  * @param callback 回调函数

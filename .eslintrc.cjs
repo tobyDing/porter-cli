@@ -1,24 +1,14 @@
 module.exports = {
   root: true,
-  env: { browser: true, es2020: true },
-  extends: [
-    'eslint:recommended',
-    '@typescript-eslint/recommended',
-    '@typescript-eslint/recommended-type-checked'
-  ],
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
-  parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint'],
+  env: { node: true, es2020: true },
+  parser: "@typescript-eslint/parser",
+  plugins: ["@typescript-eslint"],
+  ignorePatterns: ["dist", ".eslintrc.cjs"],
   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
+    ecmaVersion: "latest",
+    sourceType: "module",
   },
   rules: {
-    '@typescript-eslint/no-unused-vars': [
-      'error',
-      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
-    ]
+    "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
   },
-}
+};

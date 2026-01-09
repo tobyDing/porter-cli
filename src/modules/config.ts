@@ -1,7 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { PorterConfig, TargetProject } from "../types";
-import { checkBranchName } from "./projectInfo";
 
 let configFilePath: string | null = null;
 
@@ -54,6 +53,10 @@ export function validateConfigStructure(config: PorterConfig): void {
     throw new Error("配置文件缺少必要字段：projectPath（源项目目录路径）");
   }
 
+  if (!config.projectName) {
+    throw new Error("配置文件缺少必要字段：projectName（源项目名称）");
+  }
+
   if (!config.targetProjects || !Array.isArray(config.targetProjects)) {
     throw new Error("配置文件缺少必要字段：targetProjects");
   }
@@ -77,12 +80,6 @@ export function validateTargetProjects(targetProjects: TargetProject[]): void {
     if (!project.projectPath) {
       throw new Error("目标项目缺少必要字段：projectPath");
     }
-
-    if (!project.branch) {
-      throw new Error("目标项目缺少必要字段：branch");
-    }
-
-    checkBranchName(project.branch);
   }
 }
 
@@ -120,18 +117,21 @@ export async function readAndValidateConfig(): Promise<PorterConfig> {
  * @throws 如果创建配置文件失败则抛出错误
  */
 export async function createDefaultConfig(projectPath: string): Promise<void> {
-  const defaultConfig: PorterConfig = {
-    projectName: "源项目名称",
-    projectPath: projectPath,
-    "commit-id": "上次同步的 commit-id或者需要从哪个 commit 开始同步",
-    targetProjects: [
-      {
-        projectName: "目标项目名称",
-        projectPath: "目标项目路径",
-        branch: "目标分支名称",
-      },
-    ],
-  };
+  // 读取模板文件
+  // 获取当前模块所在目录，确保模板文件路径正确
+  const __filename = new URL(import.meta.url).pathname;
+  const __dirname = path.dirname(__filename);
+  const templatePath = path.join(__dirname, "../template/porter.config.json");
+  let templateContent;
+  try {
+    templateContent = await fs.readFile(templatePath, "utf-8");
+  } catch (error) {
+    throw new Error(`读取模板文件失败：${(error as Error).message}`);
+  }
+
+  // 解析模板内容并替换projectPath
+  const defaultConfig = JSON.parse(templateContent);
+  defaultConfig.projectPath = projectPath;
 
   const filePath = getConfigFilePath();
   try {
