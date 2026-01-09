@@ -64,11 +64,11 @@ function hasConflictMarkers(targetProjectPath: string): boolean {
 /**
  * 等待用户手动解决冲突
  * @param targetProjectPath 目标项目路径
- * @returns 用户是否选择继续
+ * @returns 用户是否选择继续，undefined表示需要重新再试
  */
 async function waitForUserToResolveConflict(
   targetProjectPath: string
-): Promise<boolean> {
+): Promise<boolean | undefined> {
   console.log(`\n请在目标项目路径 ${targetProjectPath} 中手动解决代码冲突。`);
   console.log("解决冲突后，请选择以下操作：");
 
@@ -81,6 +81,7 @@ async function waitForUserToResolveConflict(
         { name: "继续同步", value: "continue" },
         { name: "取消当前同步", value: "abort" },
         { name: "退出程序", value: "exit" },
+        { name: "重新再试", value: "retry" },
       ],
     },
   ]);
@@ -101,6 +102,16 @@ async function waitForUserToResolveConflict(
   } else if (response === "exit") {
     console.log("程序将退出。");
     process.exit(0);
+  } else if (response === "retry") {
+    // 重新再试前先取消当前的cherry-pick操作
+    try {
+      executeGitCommandInDir("cherry-pick --abort", targetProjectPath);
+      console.log("已取消当前 cherry-pick 操作。");
+    } catch (error) {
+      console.error(`取消 cherry-pick 时出错：${(error as Error).message}`);
+    }
+    // 返回特殊值，让调用者知道需要重新执行当前提交
+    return undefined;
   } else {
     console.log("无效的输入，请重新输入。");
     // 递归调用以获取有效输入
@@ -216,16 +227,19 @@ export async function syncToTargetProject(
               targetProject.projectPath
             );
 
-            if (!shouldContinue) {
+            if (shouldContinue === undefined) {
+              // 用户选择了重新再试，不改变syncSuccess，继续循环
+              console.log(`重新执行提交 ${commitId}...`);
+            } else if (!shouldContinue) {
               console.log(`跳过提交 ${commitId}，继续下一个提交...`);
               syncSuccess = true; // 设置为true以退出循环
               break;
+            } else {
+              // 用户选择了继续同步，直接认为当前提交已经同步完成
+              // 进入下一个提交的处理流程，不再进行额外的检测
+              console.log(`✅ 用户确认提交 ${commitId} 已同步完成`);
+              syncSuccess = true;
             }
-
-            // 用户选择了继续同步，直接认为当前提交已经同步完成
-            // 进入下一个提交的处理流程，不再进行额外的检测
-            console.log(`✅ 用户确认提交 ${commitId} 已同步完成`);
-            syncSuccess = true;
           }
         }
       }
