@@ -11,7 +11,7 @@ export default defineConfig({
       fileName: () => 'index.js'
     },
     rollupOptions: {
-      external: ['node:child_process', 'node:fs/promises', 'node:path', 'commander', 'inquirer'],
+      external: ['node:child_process', 'node:fs/promises', 'node:fs', 'node:path', 'node:readline', 'commander', 'inquirer'],
       output: {
         banner: '#!/usr/bin/env node',
         exports: 'named'
