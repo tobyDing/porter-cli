@@ -198,21 +198,42 @@ export function hasUnstagedChanges(projectPath: string): boolean {
 }
 
 /**
+ * 获取指定目录下commit-id的完整形式
+ * @param projectPath 项目目录路径
+ * @param commitId 完整或短的commit-id
+ * @returns 完整的commit-id
+ * @throws 如果commit-id不存在则抛出错误
+ */
+export function getFullCommitId(projectPath: string, commitId: string): string {
+  const absolutePath = path.isAbsolute(projectPath)
+    ? projectPath
+    : path.resolve(process.cwd(), projectPath);
+
+  try {
+    // 使用git rev-parse获取完整的commit-id
+    const fullCommitId = executeGitCommandInDir(
+      `rev-parse ${commitId}`,
+      absolutePath
+    );
+    return fullCommitId;
+  } catch (error) {
+    throw new Error(`获取完整commit-id失败：${(error as Error).message}`);
+  }
+}
+
+/**
  * 检查指定目录下的commit-id是否存在
  * @param projectPath 项目目录路径
- * @param commitId commit-id
+ * @param commitId commit-id（支持完整或短形式）
  * @returns 如果commit-id存在返回true，否则返回false
  */
 export function checkCommitIdExists(
   projectPath: string,
   commitId: string
 ): boolean {
-  const absolutePath = path.isAbsolute(projectPath)
-    ? projectPath
-    : path.resolve(process.cwd(), projectPath);
-
   try {
-    executeGitCommandInDir(`cat-file -e ${commitId}`, absolutePath);
+    // 尝试获取完整的commit-id，如果成功则说明commit-id存在
+    getFullCommitId(projectPath, commitId);
     return true;
   } catch {
     return false;
