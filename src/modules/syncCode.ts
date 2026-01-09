@@ -2,7 +2,11 @@ import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { ProjectInfo } from "../types";
 import { PorterConfig, TargetProject } from "../types";
-import { isSameGitRepository, executeGitCommandInDir } from "../utils/git";
+import {
+  isSameGitRepository,
+  executeGitCommandInDir,
+  cleanupAllTempRemotes,
+} from "../utils/git";
 import inquirer from "inquirer";
 
 /**
@@ -101,7 +105,8 @@ async function waitForUserToResolveConflict(
     return false;
   } else if (response === "exit") {
     console.log("程序将退出。");
-    process.exit(0);
+    // 抛出特定错误，让调用者处理退出逻辑，确保清理操作被执行
+    throw new Error("USER_EXIT");
   } else if (response === "retry") {
     // 重新再试前先取消当前的cherry-pick操作
     try {
@@ -199,11 +204,18 @@ export async function syncToTargetProject(
             executeCommand(`git add .`);
             syncSuccess = true;
           } catch (error) {
+            const errorMessage = (error as Error).message;
+
+            // 检查是否是用户选择退出程序
+            if (errorMessage === "USER_EXIT") {
+              // 重新抛出错误，让上层处理
+              throw error;
+            }
+
             console.log(`⚠️  同步提交 ${commitId} 失败`);
 
             // 检查是否是冲突错误
             let isConflict = false;
-            const errorMessage = (error as Error).message;
 
             // 检查错误信息是否包含冲突标记
             if (errorMessage.includes("CONFLICT")) {
@@ -307,10 +319,16 @@ export async function syncCode(
     try {
       await syncToTargetProject(projectInfo, targetProject, commitIds);
     } catch (error) {
+      const errorMessage = (error as Error).message;
+
+      // 检查是否是用户选择退出程序
+      if (errorMessage === "USER_EXIT") {
+        // 重新抛出错误，让更高层处理
+        throw error;
+      }
+
       console.error(
-        `❌ 同步到项目 ${targetProject.projectName} 失败：${
-          (error as Error).message
-        }`
+        `❌ 同步到项目 ${targetProject.projectName} 失败：${errorMessage}`
       );
       // 继续同步其他项目
     }
@@ -318,6 +336,20 @@ export async function syncCode(
 
   // 清理环境变量
   delete process.env.PORTER_SOURCE_PROJECT_PATH;
+
+  // 清理所有目标项目中的临时远程仓库
+  for (const targetProject of config.targetProjects) {
+    try {
+      await cleanupAllTempRemotes(targetProject.projectPath);
+    } catch (cleanupError) {
+      // 忽略清理错误，继续处理其他项目
+      console.error(
+        `清理项目 ${targetProject.projectName} 的临时远程仓库时出错：${
+          (cleanupError as Error).message
+        }`
+      );
+    }
+  }
 
   console.log(`\n=== 代码同步完成 ===`);
   console.log(`✅ 已完成所有目标项目的代码同步。`);

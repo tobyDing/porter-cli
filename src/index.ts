@@ -14,7 +14,7 @@ import {
 } from "./modules/projectInfo";
 import { readAndValidateConfig, setConfigFilePath } from "./modules/config";
 import { syncCode } from "./modules/syncCode";
-import { checkCommitIdExists } from "./utils/git";
+import { checkCommitIdExists, cleanupAllTempRemotes } from "./utils/git";
 import path from "node:path";
 import fs from "node:fs/promises";
 import inquirer from "inquirer";
@@ -138,9 +138,85 @@ async function main() {
 
     await syncCode(projectInfo, config);
   } catch (error) {
-    console.error(`❌ 错误：${(error as Error).message}`);
-    process.exit(1);
+    const errorMessage = (error as Error).message;
+
+    // 检查是否是用户选择退出程序
+    if (errorMessage === "USER_EXIT") {
+      // 不显示错误信息，只显示退出提示
+      console.log("\n程序已退出。");
+    } else {
+      // 显示其他错误信息
+      console.error(`❌ 错误：${errorMessage}`);
+    }
+
+    // 清理所有临时远程仓库
+    try {
+      await cleanupAllTempRemotes();
+    } catch (cleanupError) {
+      console.error(
+        `清理临时远程仓库时发生错误：${(cleanupError as Error).message}`
+      );
+    }
+
+    // 用户主动退出时返回0，其他错误返回1
+    process.exit(errorMessage === "USER_EXIT" ? 0 : 1);
   }
 }
+
+// 信号处理器：在程序被中断时清理临时远程仓库
+process.on("SIGINT", async () => {
+  console.log("\n接收到中断信号，正在清理临时资源...");
+  try {
+    await cleanupAllTempRemotes();
+    console.log("✅ 临时资源已清理");
+  } catch (error) {
+    console.error(`清理临时资源时发生错误：${(error as Error).message}`);
+  }
+  process.exit(1);
+});
+
+// 信号处理器：在程序被终止时清理临时远程仓库
+process.on("SIGTERM", async () => {
+  console.log("\n程序正在终止，正在清理临时资源...");
+  try {
+    await cleanupAllTempRemotes();
+    console.log("✅ 临时资源已清理");
+  } catch (error) {
+    console.error(`清理临时资源时发生错误：${(error as Error).message}`);
+  }
+  process.exit(1);
+});
+
+// 处理未捕获的Promise拒绝
+process.on("unhandledRejection", async (reason, _promise) => {
+  console.error("\n❌ 未处理的Promise拒绝：");
+  console.error(`原因：${reason instanceof Error ? reason.message : reason}`);
+
+  // 清理临时远程仓库
+  try {
+    await cleanupAllTempRemotes();
+    console.log("✅ 临时资源已清理");
+  } catch (error) {
+    console.error(`清理临时资源时发生错误：${(error as Error).message}`);
+  }
+
+  process.exit(1);
+});
+
+// 处理未捕获的异常
+process.on("uncaughtException", async (error) => {
+  console.error("\n❌ 未捕获的异常：");
+  console.error(error.message);
+
+  // 清理临时远程仓库
+  try {
+    await cleanupAllTempRemotes();
+    console.log("✅ 临时资源已清理");
+  } catch (cleanupError) {
+    console.error(`清理临时资源时发生错误：${(cleanupError as Error).message}`);
+  }
+
+  process.exit(1);
+});
 
 main();
