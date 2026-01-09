@@ -6,6 +6,7 @@ import {
   getCommits,
   checkBranchExists,
   executeGitCommandInDir,
+  hasUnstagedChanges,
 } from "../utils/git";
 import { GitCommit, ProjectInfo, TargetProject } from "../types";
 
@@ -148,6 +149,38 @@ export async function checkAllTargetProjects(
       );
     }
     console.log(`✅ 项目"${project.projectName}"分支"${project.branch}"存在`);
+
+    // 检查目标项目分支是否有未暂存的变更
+    try {
+      // 切换到目标项目的指定分支
+      executeGitCommandInDir(`checkout ${project.branch}`, project.projectPath);
+      console.log(
+        `✅ 已切换到项目"${project.projectName}"的分支"${project.branch}"`
+      );
+
+      // 检查是否有未暂存的变更
+      const unstagedChanges = hasUnstagedChanges(project.projectPath);
+      if (unstagedChanges) {
+        throw new Error(
+          `目标项目"${project.projectName}"的分支"${project.branch}"存在未暂存的变更，请先执行git add或git stash命令。`
+        );
+      }
+      console.log(
+        `✅ 项目"${project.projectName}"分支"${project.branch}"没有未暂存的变更`
+      );
+    } catch (error) {
+      // 如果切换分支时出错（比如有未暂存变更），重新抛出更明确的错误
+      if (
+        (error as Error).message.includes("Your local changes") ||
+        (error as Error).message.includes("unstaged changes")
+      ) {
+        throw new Error(
+          `目标项目"${project.projectName}"的分支"${project.branch}"存在未暂存的变更，请先执行git add或git stash命令后再继续。`
+        );
+      }
+      // 其他错误直接抛出
+      throw error;
+    }
   }
 }
 
