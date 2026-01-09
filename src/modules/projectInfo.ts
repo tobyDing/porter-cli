@@ -1,5 +1,13 @@
-import { getProjectName, getCurrentBranch, getCommits } from "../utils/git";
-import { GitCommit, ProjectInfo } from "../types";
+import path from "node:path";
+import fsSync from "node:fs";
+import {
+  getProjectName,
+  getCurrentBranch,
+  getCommits,
+  checkBranchExists,
+  executeGitCommandInDir,
+} from "../utils/git";
+import { GitCommit, ProjectInfo, TargetProject } from "../types";
 
 /**
  * 解析Git提交记录
@@ -70,5 +78,114 @@ export function checkBranchName(branch: string): void {
         `分支名称不能包含"${keyword}"关键字，请使用其他分支名称。`
       );
     }
+  }
+}
+
+/**
+ * 检查目标项目是否存在
+ * @param targetProject 目标项目配置
+ * @throws 如果目标项目不存在则抛出错误
+ */
+export function checkTargetProjectExists(targetProject: TargetProject): void {
+  try {
+    const { projectPath } = targetProject;
+    const absolutePath = path.isAbsolute(projectPath)
+      ? projectPath
+      : path.resolve(process.cwd(), projectPath);
+
+    // 检查目录是否存在
+    if (!fsSync.existsSync(absolutePath)) {
+      throw new Error(`目标项目目录不存在：${absolutePath}`);
+    }
+
+    // 检查是否是Git仓库
+    executeGitCommandInDir("rev-parse --is-inside-work-tree", absolutePath);
+  } catch (error) {
+    throw new Error(
+      `目标项目"${targetProject.projectName}"不存在或不是有效的Git仓库：${targetProject.projectPath}`
+    );
+  }
+}
+
+/**
+ * 检查目标项目的分支名称是否符合规范
+ * @param targetProject 目标项目配置
+ * @throws 如果分支名称不符合规范则抛出错误
+ */
+export function checkTargetBranchName(targetProject: TargetProject): void {
+  checkBranchName(targetProject.branch);
+}
+
+/**
+ * 检查所有目标项目
+ * @param targetProjects 目标项目列表
+ * @throws 如果任何一个项目检查失败则抛出错误
+ */
+export async function checkAllTargetProjects(
+  targetProjects: TargetProject[]
+): Promise<void> {
+  for (const project of targetProjects) {
+    console.log(`\n检查目标项目: ${project.projectName}`);
+
+    // 直接检查项目是否存在，不存在则抛出错误
+    checkTargetProjectExists(project);
+    console.log(`✅ 项目"${project.projectName}"存在`);
+
+    // 检查目标项目分支字段是否存在
+    if (!project.branch) {
+      throw new Error(`目标项目"${project.projectName}"缺少必要字段：branch`);
+    }
+
+    // 检查目标项目分支名称规范
+    checkTargetBranchName(project);
+    console.log(`✅ 项目"${project.projectName}"分支名称符合规范`);
+
+    // 直接检查分支是否存在，不存在则抛出错误
+    const branchExists = checkBranchExists(project.projectPath, project.branch);
+    if (!branchExists) {
+      throw new Error(
+        `目标项目"${project.projectName}"的分支"${project.branch}"不存在，请先创建分支。`
+      );
+    }
+    console.log(`✅ 项目"${project.projectName}"分支"${project.branch}"存在`);
+  }
+}
+
+/**
+ * 检查源项目是否存在
+ * @param projectPath 源项目目录路径
+ * @throws 如果源项目不存在则抛出错误
+ */
+export function checkSourceProjectExists(projectPath: string): void {
+  try {
+    const absolutePath = path.isAbsolute(projectPath)
+      ? projectPath
+      : path.resolve(process.cwd(), projectPath);
+
+    // 检查目录是否存在
+    if (!fsSync.existsSync(absolutePath)) {
+      throw new Error(`源项目目录不存在：${absolutePath}`);
+    }
+
+    // 检查是否是Git仓库
+    executeGitCommandInDir("rev-parse --is-inside-work-tree", absolutePath);
+  } catch (error) {
+    throw new Error(`源项目不存在或不是有效的Git仓库：${projectPath}`);
+  }
+}
+
+/**
+ * 检查源项目的分支是否存在
+ * @param projectPath 源项目目录路径
+ * @param branch 源项目分支名称
+ * @throws 如果源项目分支不存在则立即抛出错误
+ */
+export function checkSourceBranchExists(
+  projectPath: string,
+  branch: string
+): void {
+  const branchExists = checkBranchExists(projectPath, branch);
+  if (!branchExists) {
+    throw new Error(`源项目的分支"${branch}"不存在，请先创建分支。`);
   }
 }

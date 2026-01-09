@@ -11,8 +11,10 @@ export interface TargetProject {
 export interface PorterConfig {
   /** 源项目的目录路径，指向同步的源项目。必填项 */
   projectPath: string;
-  /** 源项目的名称，用于在同步时提示用户。可选项，默认从源项目的package.json或git remote获取 */
-  projectName?: string;
+  /** 源项目的名称，用于在同步时提示用户。必填项，不填报错 */
+  projectName: string;
+  /** 源项目的分支，必须指定。必填项 */
+  branch: string;
   /** 指定从源项目当前分支哪次 commit 开始同步。可选项 */
   "commit-id"?: string;
   /** 要同步的目标项目列表 */
