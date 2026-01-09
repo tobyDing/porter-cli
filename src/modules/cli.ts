@@ -1,15 +1,32 @@
 import inquirer from "inquirer";
 import { ProjectInfo } from "../types";
 import { createDefaultConfig } from "./config";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+/**
+ * 获取package.json配置内容
+ * @returns package.json配置对象
+ */
+export function getPackageConfig(): Record<string, any> {
+  // 使用process.cwd()获取当前工作目录，确保能正确找到根目录的package.json
+  const packageJsonPath = resolve(process.cwd(), "package.json");
+  const packageJsonContent = readFileSync(packageJsonPath, "utf-8");
+  return JSON.parse(packageJsonContent);
+}
 
 /**
  * 显示欢迎信息
  */
 export function showWelcome(): void {
-  console.log("====================================");
-  console.log("          Porter-CI 工具");
-  console.log("  基于git cherry-pick实现跨项目代码同步");
-  console.log("====================================\n");
+  // 从package.json中读取描述字段
+  const packageJson = getPackageConfig();
+
+  console.log("=============================================");
+  console.log("          欢迎来到porter的世界！         ");
+  console.log(`  ${packageJson.description}`);
+  console.log("=============================================");
+  console.log("\n");
 }
 
 /**
@@ -76,5 +93,5 @@ export async function askToStartSync(): Promise<boolean> {
  */
 export async function handleConfigCreation(projectPath: string): Promise<void> {
   await createDefaultConfig(projectPath);
-  console.log("配置文件已创建，请编辑后重新运行porter-ci工具。");
+  console.log("配置文件已创建，请编辑后重新运行porter工具。");
 }

@@ -21,8 +21,8 @@ import fs from "node:fs/promises";
  */
 async function findConfigFile(): Promise<string | null> {
   const possiblePaths = [
-    ".porter-ci.config.json",
-    path.join(process.cwd(), ".porter-ci.config.json"),
+    "porter.config.json",
+    path.join(process.cwd(), "porter.config.json"),
   ];
 
   for (const configPath of possiblePaths) {
@@ -47,7 +47,7 @@ async function main() {
     const configPath = await findConfigFile();
 
     if (!configPath) {
-      console.log("未找到配置文件 .porter-ci.config.json");
+      console.log("未找到配置文件 porter.config.json");
       console.log("请在当前目录或指定路径创建配置文件。");
       const shouldCreate = await askToCreateConfig();
       if (shouldCreate) {
