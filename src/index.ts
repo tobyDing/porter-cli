@@ -14,7 +14,11 @@ import {
 } from "./modules/projectInfo";
 import { readAndValidateConfig, setConfigFilePath } from "./modules/config";
 import { syncCode } from "./modules/syncCode";
-import { checkCommitIdExists, cleanupAllTempRemotes } from "./utils/git";
+import {
+  checkCommitIdExists,
+  cleanupAllTempRemotes,
+  getFullCommitId,
+} from "./utils/git";
 import path from "node:path";
 import fs from "node:fs/promises";
 import inquirer from "inquirer";
@@ -90,6 +94,13 @@ async function main() {
           `源项目的commit-id "${config["commit-id"]}"不存在，请检查配置。`
         );
       }
+      // 获取完整的commit-id
+      const fullCommitId = getFullCommitId(
+        config.projectPath,
+        config["commit-id"]
+      );
+      // 更新配置为完整的commit-id
+      config["commit-id"] = fullCommitId;
       console.log(`✅ 源项目commit-id "${config["commit-id"]}"存在`);
     }
 
