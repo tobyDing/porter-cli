@@ -1,22 +1,30 @@
-import { defineConfig } from 'vite'
-import path from 'path'
+import { defineConfig } from "vite";
+import path from "path";
 
 export default defineConfig({
   build: {
-    outDir: 'dist',
+    outDir: "dist",
     lib: {
-      entry: path.resolve(__dirname, 'src/index.ts'),
-      name: 'porter-ci',
-      formats: ['es'],
-      fileName: () => 'index.js'
+      entry: path.resolve(__dirname, "src/index.ts"),
+      name: "porter",
+      formats: ["es"],
+      fileName: () => "index.js",
     },
     rollupOptions: {
-      external: ['node:child_process', 'node:fs/promises', 'node:fs', 'node:path', 'node:readline', 'commander', 'inquirer'],
+      external: [
+        "node:child_process",
+        "node:fs/promises",
+        "node:fs",
+        "node:path",
+        "node:readline",
+        "commander",
+        "inquirer",
+      ],
       output: {
-        banner: '#!/usr/bin/env node',
-        exports: 'named'
-      }
+        banner: "#!/usr/bin/env node",
+        exports: "named",
+      },
     },
-    emptyOutDir: true
-  }
-})
+    emptyOutDir: true,
+  },
+});

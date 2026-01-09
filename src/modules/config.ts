@@ -21,7 +21,7 @@ export function getConfigFilePath(): string {
   if (configFilePath) {
     return configFilePath;
   }
-  return path.join(process.cwd(), ".porter-ci.config.json");
+  return path.join(process.cwd(), "porter.config.json");
 }
 
 /**
@@ -37,7 +37,7 @@ export async function readConfigFile(): Promise<PorterConfig> {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       throw new Error(
-        `配置文件不存在：${filePath}\n请创建 ".porter-ci.config.json" 文件。`
+        `配置文件不存在：${filePath}\n请创建 "porter.config.json" 文件。`
       );
     }
     throw new Error(`配置文件格式错误：${(error as Error).message}`);
