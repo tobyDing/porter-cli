@@ -85,7 +85,7 @@ async function main() {
       return;
     }
 
-    syncCode(projectInfo, config);
+    await syncCode(projectInfo, config);
   } catch (error) {
     console.error(`❌ 错误：${(error as Error).message}`);
     process.exit(1);

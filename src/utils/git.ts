@@ -12,9 +12,22 @@ export function executeGitCommand(
   options?: ExecSyncOptions
 ): string {
   try {
-    return execSync(`git ${command}`, options).toString().trim();
+    const result = execSync(`git ${command}`, {
+      ...options,
+      // 使用pipe捕获输出，而不是inherit
+      stdio: options?.stdio || ["ignore", "pipe", "pipe"], // 忽略输入，捕获输出和错误
+      // 设置GIT_EDITOR环境变量为true，禁用git的编辑器功能
+      env: {
+        ...process.env,
+        ...options?.env,
+        GIT_EDITOR: options?.env?.GIT_EDITOR || "true",
+      },
+    });
+    // 确保result不为null再调用toString()
+    return result ? result.toString().trim() : "";
   } catch (error) {
-    throw new Error(`Git命令执行失败: ${command}\n${(error as Error).message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Git命令执行失败: ${command}\n${errorMessage}`);
   }
 }
 
@@ -28,13 +41,21 @@ export function executeGitCommandInDir(command: string, cwd: string): string {
   try {
     const options: ExecSyncOptions = {
       cwd: path.isAbsolute(cwd) ? cwd : path.resolve(process.cwd(), cwd),
+      // 使用pipe捕获输出，而不是inherit
+      stdio: ["ignore", "pipe", "pipe"], // 忽略输入，捕获输出和错误
+      // 设置GIT_EDITOR环境变量为true，禁用git的编辑器功能
+      env: {
+        ...process.env,
+        GIT_EDITOR: "true",
+      },
     };
-    return execSync(`git ${command}`, options).toString().trim();
+    const result = execSync(`git ${command}`, options);
+    // 确保result不为null再调用toString()
+    return result ? result.toString().trim() : "";
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Git命令执行失败: ${command}\n在目录 ${cwd} 中执行失败：${
-        (error as Error).message
-      }`
+      `Git命令执行失败: ${command}\n在目录 ${cwd} 中执行失败：${errorMessage}`
     );
   }
 }
