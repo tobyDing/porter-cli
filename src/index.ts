@@ -1,3 +1,6 @@
+import { Command } from "commander";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 import {
   showWelcome,
   askToCreateConfig,
@@ -19,8 +22,6 @@ import {
   cleanupAllTempRemotes,
   getFullCommitId,
 } from "./utils/git";
-import path from "node:path";
-import fs from "node:fs/promises";
 import inquirer from "inquirer";
 
 /**
@@ -46,10 +47,58 @@ async function findConfigFile(): Promise<string | null> {
 }
 
 /**
+ * 获取版本信息
+ */
+async function getVersion(): Promise<string> {
+  // 在ES模块中使用import.meta.url获取当前模块位置
+  const __dirname = path.dirname(new URL(import.meta.url).pathname);
+  const packagePath = path.resolve(__dirname, "../package.json");
+  const packageContent = await fs.readFile(packagePath, "utf-8");
+  const packageJson = JSON.parse(packageContent);
+  return packageJson.version;
+}
+
+/**
+ * 初始化命令行程序
+ */
+async function initCLI() {
+  const version = await getVersion();
+
+  const program = new Command();
+
+  // 设置版本信息
+  program.version(version, "-v, --version", "查看工具版本");
+
+  // 设置帮助信息
+  program
+    .name("porter")
+    .description("基于git实现跨项目代码功能同步的CI工具")
+    .helpOption("-h, --help", "查看帮助信息");
+
+  // 解析命令行参数
+  program.parse(process.argv);
+
+  // 如果没有提供任何命令行参数，则运行主程序
+  if (!program.args.length && !program.opts().version && !program.opts().help) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * 主函数
  */
 async function main() {
   try {
+    // 初始化命令行程序
+    const shouldRunMain = await initCLI();
+
+    // 如果用户使用了命令行参数（如--version或--help），则不继续执行主程序
+    if (!shouldRunMain) {
+      return;
+    }
+
     showWelcome();
 
     const configPath = await findConfigFile();
