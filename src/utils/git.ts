@@ -169,6 +169,35 @@ export function checkBranchExists(
 }
 
 /**
+ * 检查指定目录下是否有未暂存的变更
+ * @param projectPath 项目目录路径
+ * @returns 如果有未暂存的变更返回true，否则返回false
+ */
+export function hasUnstagedChanges(projectPath: string): boolean {
+  const absolutePath = path.isAbsolute(projectPath)
+    ? projectPath
+    : path.resolve(process.cwd(), projectPath);
+
+  try {
+    // 直接使用git status命令检查工作区状态
+    // 使用--porcelain选项获取一致的输出格式
+    const statusOutput = executeGitCommandInDir(
+      "status --porcelain",
+      absolutePath
+    );
+
+    // 如果输出为空，说明工作区干净，没有未暂存的变更
+    if (!statusOutput || statusOutput.trim() === "") {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    throw new Error(`检查未暂存变更时出错：${(error as Error).message}`);
+  }
+}
+
+/**
  * 检查指定目录下的commit-id是否存在
  * @param projectPath 项目目录路径
  * @param commitId commit-id
