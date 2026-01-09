@@ -31,18 +31,37 @@ function parseCommits(commitLines: string[]): GitCommit[] {
  * 读取指定项目的项目信息
  * @param projectPath 项目目录路径
  * @param projectName 项目名称（可选）
- * @param sinceCommit 起始提交ID（可选）
+ * @param sinceCommit 起始提交ID或提交ID数组（可选）
  * @returns 项目信息
  */
 export async function readProjectInfo(
   projectPath: string,
   projectName?: string,
-  sinceCommit?: string
+  sinceCommit?: string | string[]
 ): Promise<ProjectInfo> {
   const name = projectName || (await getProjectName(projectPath));
   const branch = getCurrentBranch(projectPath);
-  const commitLines = getCommits(projectPath, sinceCommit);
-  const commits = parseCommits(commitLines);
+  let commits: GitCommit[] = [];
+
+  if (Array.isArray(sinceCommit)) {
+    // 处理commit-id数组：直接使用指定的commit-id
+    const commitLines: string[] = [];
+    for (const commitId of sinceCommit) {
+      // 使用git log获取单个commit的信息
+      const commitInfo = executeGitCommandInDir(
+        `log -1 --format="%H %s" ${commitId}`,
+        projectPath
+      );
+      if (commitInfo) {
+        commitLines.push(commitInfo);
+      }
+    }
+    commits = parseCommits(commitLines);
+  } else {
+    // 处理单个sinceCommit：获取从sinceCommit到HEAD的所有提交
+    const commitLines = getCommits(projectPath, sinceCommit);
+    commits = parseCommits(commitLines);
+  }
 
   return {
     name,

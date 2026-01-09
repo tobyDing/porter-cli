@@ -88,7 +88,27 @@ export function validateTargetProjects(targetProjects: TargetProject[]): void {
  * @param config 配置对象
  * @throws 如果配置内容不符合要求则抛出错误
  */
-export function validateConfigContent(_config: PorterConfig): void {}
+export function validateConfigContent(config: PorterConfig): void {
+  // 验证 commit-id 字段
+  if (config["commit-id"]) {
+    const commitId = config["commit-id"];
+    if (Array.isArray(commitId)) {
+      // 验证数组中的每个元素都是非空字符串
+      for (const id of commitId) {
+        if (typeof id !== "string" || !id.trim()) {
+          throw new Error("配置文件中commit-id数组的每个元素必须是非空字符串");
+        }
+      }
+      // 验证数组长度至少为1
+      if (commitId.length === 0) {
+        throw new Error("配置文件中commit-id数组不能为空");
+      }
+    } else if (typeof commitId !== "string" || !commitId.trim()) {
+      // 验证字符串类型的commit-id
+      throw new Error("配置文件中commit-id必须是非空字符串或非空字符串数组");
+    }
+  }
+}
 
 /**
  * 验证配置文件

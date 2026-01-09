@@ -15,8 +15,8 @@ export interface PorterConfig {
   projectName: string;
   /** 源项目的分支，必须指定。必填项 */
   branch: string;
-  /** 指定从源项目当前分支哪次 commit 开始同步。可选项 */
-  "commit-id"?: string;
+  /** 指定从源项目当前分支哪次 commit 开始同步，或自定义提交列表。可选项 */
+  "commit-id"?: string | string[];
   /** 要同步的目标项目列表 */
   targetProjects: TargetProject[];
 }

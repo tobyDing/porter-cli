@@ -85,23 +85,46 @@ async function main() {
 
     // 检查源项目commit-id是否存在（如果指定了）
     if (config["commit-id"]) {
-      const commitIdExists = checkCommitIdExists(
-        config.projectPath,
-        config["commit-id"]
-      );
-      if (!commitIdExists) {
-        throw new Error(
-          `源项目的commit-id "${config["commit-id"]}"不存在，请检查配置。`
+      if (Array.isArray(config["commit-id"])) {
+        // 处理commit-id数组
+        const fullCommitIds: string[] = [];
+        for (const commitId of config["commit-id"]) {
+          const commitIdExists = checkCommitIdExists(
+            config.projectPath,
+            commitId
+          );
+          if (!commitIdExists) {
+            throw new Error(
+              `源项目的commit-id "${commitId}"不存在，请检查配置。`
+            );
+          }
+          // 获取完整的commit-id
+          const fullCommitId = getFullCommitId(config.projectPath, commitId);
+          fullCommitIds.push(fullCommitId);
+        }
+        // 更新配置为完整的commit-id数组
+        config["commit-id"] = fullCommitIds;
+        console.log(`✅ 源项目${fullCommitIds.length}个commit-id都存在`);
+      } else {
+        // 处理单个commit-id
+        const commitIdExists = checkCommitIdExists(
+          config.projectPath,
+          config["commit-id"]
         );
+        if (!commitIdExists) {
+          throw new Error(
+            `源项目的commit-id "${config["commit-id"]}"不存在，请检查配置。`
+          );
+        }
+        // 获取完整的commit-id
+        const fullCommitId = getFullCommitId(
+          config.projectPath,
+          config["commit-id"]
+        );
+        // 更新配置为完整的commit-id
+        config["commit-id"] = fullCommitId;
+        console.log(`✅ 源项目commit-id "${config["commit-id"]}"存在`);
       }
-      // 获取完整的commit-id
-      const fullCommitId = getFullCommitId(
-        config.projectPath,
-        config["commit-id"]
-      );
-      // 更新配置为完整的commit-id
-      config["commit-id"] = fullCommitId;
-      console.log(`✅ 源项目commit-id "${config["commit-id"]}"存在`);
     }
 
     // 显示源项目配置信息给用户确认
