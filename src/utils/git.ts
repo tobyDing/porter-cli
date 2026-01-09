@@ -220,6 +220,59 @@ export function checkCommitIdExists(
 }
 
 /**
+ * 清理所有以temp_porter_开头的临时远程仓库
+ * @param projectPath 项目目录路径（可选，默认当前目录）
+ */
+export async function cleanupAllTempRemotes(
+  projectPath?: string
+): Promise<void> {
+  const targetPath = projectPath || process.cwd();
+  const absolutePath = path.isAbsolute(targetPath)
+    ? targetPath
+    : path.resolve(process.cwd(), targetPath);
+
+  try {
+    // 列出所有远程仓库
+    const remotesOutput = executeGitCommandInDir("remote", absolutePath);
+
+    if (!remotesOutput) {
+      return; // 没有远程仓库
+    }
+
+    const remotes = remotesOutput
+      .split("\n")
+      .map((remote) => remote.trim())
+      .filter((remote) => remote);
+
+    // 过滤出临时远程仓库
+    const tempRemotes = remotes.filter((remote) =>
+      remote.startsWith("temp_porter_")
+    );
+
+    if (tempRemotes.length === 0) {
+      return; // 没有临时远程仓库
+    }
+
+    console.log(`发现 ${tempRemotes.length} 个临时远程仓库，正在清理...`);
+
+    // 删除临时远程仓库
+    for (const remote of tempRemotes) {
+      try {
+        executeGitCommandInDir(`remote remove ${remote}`, absolutePath);
+        console.log(`✅ 已移除临时远程仓库：${remote}`);
+      } catch (error) {
+        console.error(
+          `移除临时远程仓库 ${remote} 时出错：${(error as Error).message}`
+        );
+      }
+    }
+  } catch (error) {
+    // 如果不是git仓库或者其他错误，忽略
+    console.error(`检查临时远程仓库时出错：${(error as Error).message}`);
+  }
+}
+
+/**
  * 切换到指定目录执行操作（临时更改工作目录）
  * @param projectPath 项目目录路径
  * @param callback 回调函数
