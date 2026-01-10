@@ -1,13 +1,9 @@
-import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { ProjectInfo } from "../types";
-import { PorterConfig, TargetProject } from "../types";
-import {
-  isSameGitRepository,
-  executeGitCommandInDir,
-  cleanupAllTempRemotes,
-} from "../utils/git";
-import inquirer from "inquirer";
+import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { ProjectInfo } from '../types';
+import { PorterConfig, TargetProject } from '../types';
+import { isSameGitRepository, executeGitCommandInDir, cleanupAllTempRemotes } from '../utils/git';
+import inquirer from 'inquirer';
 
 /**
  * 执行命令并处理输出
@@ -18,11 +14,11 @@ function executeCommand(command: string, options: any = {}): void {
   execSync(command, {
     ...options,
     // 不使用 stdio: "inherit"，避免占用标准输入影响readline
-    stdio: ["ignore", "inherit", "inherit"], // 忽略输入，继承输出和错误
+    stdio: ['ignore', 'inherit', 'inherit'], // 忽略输入，继承输出和错误
     // 设置GIT_EDITOR环境变量为true，禁用git的编辑器功能
     env: {
       ...process.env,
-      GIT_EDITOR: "true",
+      GIT_EDITOR: 'true',
     },
   });
 }
@@ -35,25 +31,18 @@ function executeCommand(command: string, options: any = {}): void {
 function hasConflictMarkers(targetProjectPath: string): boolean {
   try {
     // 获取当前冲突的文件列表
-    const conflictedFiles = executeGitCommandInDir(
-      "status --porcelain",
-      targetProjectPath
-    )
-      .split("\n")
-      .filter((line) => line.startsWith("UU"))
+    const conflictedFiles = executeGitCommandInDir('status --porcelain', targetProjectPath)
+      .split('\n')
+      .filter((line) => line.startsWith('UU'))
       .map((line) => line.slice(3));
 
     // 检查每个冲突文件是否包含冲突标记
     for (const file of conflictedFiles) {
       const filePath = `${targetProjectPath}/${file}`;
-      const content = readFileSync(filePath, "utf-8");
+      const content = readFileSync(filePath, 'utf-8');
 
       // 检查是否包含冲突标记
-      if (
-        content.includes("<<<<<<< HEAD") ||
-        content.includes("=======") ||
-        content.includes(">>>>>>> ")
-      ) {
+      if (content.includes('<<<<<<< HEAD') || content.includes('=======') || content.includes('>>>>>>> ')) {
         return true;
       }
     }
@@ -70,55 +59,53 @@ function hasConflictMarkers(targetProjectPath: string): boolean {
  * @param targetProjectPath 目标项目路径
  * @returns 用户是否选择继续，undefined表示需要重新再试
  */
-async function waitForUserToResolveConflict(
-  targetProjectPath: string
-): Promise<boolean | undefined> {
+async function waitForUserToResolveConflict(targetProjectPath: string): Promise<boolean | undefined> {
   console.log(`\n请在目标项目路径 ${targetProjectPath} 中手动解决代码冲突。`);
-  console.log("解决冲突后，请选择以下操作：");
+  console.log('解决冲突后，请选择以下操作：');
 
   const answers = await inquirer.prompt([
     {
-      type: "list",
-      name: "action",
-      message: "请选择操作：",
+      type: 'list',
+      name: 'action',
+      message: '请选择操作：',
       choices: [
-        { name: "继续同步", value: "continue" },
-        { name: "取消当前同步", value: "abort" },
-        { name: "退出程序", value: "exit" },
-        { name: "重新再试", value: "retry" },
+        { name: '继续同步', value: 'continue' },
+        { name: '取消当前同步', value: 'abort' },
+        { name: '退出程序', value: 'exit' },
+        { name: '重新再试', value: 'retry' },
       ],
     },
   ]);
 
   const response = answers.action;
 
-  if (response === "continue") {
+  if (response === 'continue') {
     return true;
-  } else if (response === "abort") {
+  } else if (response === 'abort') {
     // 执行 git cherry-pick --abort
     try {
-      executeGitCommandInDir("cherry-pick --abort", targetProjectPath);
-      console.log("已取消当前 cherry-pick 操作。");
+      executeGitCommandInDir('cherry-pick --abort', targetProjectPath);
+      console.log('已取消当前 cherry-pick 操作。');
     } catch (error) {
       console.error(`取消 cherry-pick 时出错：${(error as Error).message}`);
     }
     return false;
-  } else if (response === "exit") {
-    console.log("程序将退出。");
+  } else if (response === 'exit') {
+    console.log('程序将退出。');
     // 抛出特定错误，让调用者处理退出逻辑，确保清理操作被执行
-    throw new Error("USER_EXIT");
-  } else if (response === "retry") {
+    throw new Error('USER_EXIT');
+  } else if (response === 'retry') {
     // 重新再试前先取消当前的cherry-pick操作
     try {
-      executeGitCommandInDir("cherry-pick --abort", targetProjectPath);
-      console.log("已取消当前 cherry-pick 操作。");
+      executeGitCommandInDir('cherry-pick --abort', targetProjectPath);
+      console.log('已取消当前 cherry-pick 操作。');
     } catch (error) {
       console.error(`取消 cherry-pick 时出错：${(error as Error).message}`);
     }
     // 返回特殊值，让调用者知道需要重新执行当前提交
     return undefined;
   } else {
-    console.log("无效的输入，请重新输入。");
+    console.log('无效的输入，请重新输入。');
     // 递归调用以获取有效输入
     return waitForUserToResolveConflict(targetProjectPath);
   }
@@ -151,7 +138,7 @@ export async function syncToTargetProject(
 
     // 检查源项目和目标项目是否属于同一个Git仓库
     const isCrossProject = !isSameGitRepository(
-      process.env.PORTER_SOURCE_PROJECT_PATH || "",
+      process.env.PORTER_SOURCE_PROJECT_PATH || '',
       targetProject.projectPath
     );
 
@@ -159,11 +146,11 @@ export async function syncToTargetProject(
     console.log(`准备同步 ${commitIds.length} 个提交...`);
 
     // 跨项目同步需要添加临时远程仓库
-    let tempRemoteName = "";
+    let tempRemoteName = '';
     if (isCrossProject) {
       // 跨项目同步：添加源项目作为临时远程仓库
       tempRemoteName = `temp_porter_${Date.now()}`;
-      const sourceProjectPath = process.env.PORTER_SOURCE_PROJECT_PATH || "";
+      const sourceProjectPath = process.env.PORTER_SOURCE_PROJECT_PATH || '';
 
       // 添加源项目作为远程仓库
       console.log(`添加源项目作为临时远程仓库：${tempRemoteName}`);
@@ -180,9 +167,7 @@ export async function syncToTargetProject(
         const commitId = commitIds[i];
         const commitIndex = i + 1;
 
-        console.log(
-          `\n=== 开始同步第 ${commitIndex}/${commitIds.length} 个提交 ===`
-        );
+        console.log(`\n=== 开始同步第 ${commitIndex}/${commitIds.length} 个提交 ===`);
         console.log(`提交ID：${commitId}`);
 
         // 构建cherry-pick命令
@@ -207,7 +192,7 @@ export async function syncToTargetProject(
             const errorMessage = (error as Error).message;
 
             // 检查是否是用户选择退出程序
-            if (errorMessage === "USER_EXIT") {
+            if (errorMessage === 'USER_EXIT') {
               // 重新抛出错误，让上层处理
               throw error;
             }
@@ -218,7 +203,7 @@ export async function syncToTargetProject(
             let isConflict = false;
 
             // 检查错误信息是否包含冲突标记
-            if (errorMessage.includes("CONFLICT")) {
+            if (errorMessage.includes('CONFLICT')) {
               isConflict = true;
             } else {
               // 主动检测差异文件是否包含冲突标记
@@ -227,7 +212,7 @@ export async function syncToTargetProject(
 
             // 无论是什么错误，都等待用户解决
             if (isConflict) {
-              console.log("❌ 检测到代码冲突！");
+              console.log('❌ 检测到代码冲突！');
             } else {
               console.log(`❌ 错误详情：${errorMessage}`);
             }
@@ -235,9 +220,7 @@ export async function syncToTargetProject(
             console.log(`请手动解决问题后继续同步。`);
 
             // 等待用户解决问题
-            const shouldContinue = await waitForUserToResolveConflict(
-              targetProject.projectPath
-            );
+            const shouldContinue = await waitForUserToResolveConflict(targetProject.projectPath);
 
             if (shouldContinue === undefined) {
               // 用户选择了重新再试，不改变syncSuccess，继续循环
@@ -256,9 +239,7 @@ export async function syncToTargetProject(
         }
       }
 
-      console.log(
-        `\n✅ 成功完成所有提交到项目 ${targetProject.projectName} 的同步！`
-      );
+      console.log(`\n✅ 成功完成所有提交到项目 ${targetProject.projectName} 的同步！`);
     } finally {
       // 清理：移除临时远程仓库
       if (isCrossProject && tempRemoteName) {
@@ -266,9 +247,7 @@ export async function syncToTargetProject(
           executeCommand(`git remote remove ${tempRemoteName}`);
           console.log(`移除临时远程仓库：${tempRemoteName}`);
         } catch (cleanupError) {
-          console.log(
-            `清理临时远程仓库时发生错误：${(cleanupError as Error).message}`
-          );
+          console.log(`清理临时远程仓库时发生错误：${(cleanupError as Error).message}`);
         }
       }
     }
@@ -284,10 +263,7 @@ export async function syncToTargetProject(
  * @param config 配置对象
  * @throws 如果同步失败则抛出错误
  */
-export async function syncCode(
-  projectInfo: ProjectInfo,
-  config: PorterConfig
-): Promise<void> {
+export async function syncCode(projectInfo: ProjectInfo, config: PorterConfig): Promise<void> {
   console.log(`\n=== 开始代码同步 ===`);
   console.log(`源项目：${projectInfo.name}`);
   console.log(`源分支：${projectInfo.branch}`);
@@ -302,7 +278,7 @@ export async function syncCode(
   const commitsToSync = projectInfo.commits;
 
   if (commitsToSync.length === 0) {
-    console.log("没有需要同步的提交。");
+    console.log('没有需要同步的提交。');
     return;
   }
 
@@ -322,14 +298,12 @@ export async function syncCode(
       const errorMessage = (error as Error).message;
 
       // 检查是否是用户选择退出程序
-      if (errorMessage === "USER_EXIT") {
+      if (errorMessage === 'USER_EXIT') {
         // 重新抛出错误，让更高层处理
         throw error;
       }
 
-      console.error(
-        `❌ 同步到项目 ${targetProject.projectName} 失败：${errorMessage}`
-      );
+      console.error(`❌ 同步到项目 ${targetProject.projectName} 失败：${errorMessage}`);
       // 继续同步其他项目
     }
   }
@@ -343,21 +317,17 @@ export async function syncCode(
       await cleanupAllTempRemotes(targetProject.projectPath);
     } catch (cleanupError) {
       // 忽略清理错误，继续处理其他项目
-      console.error(
-        `清理项目 ${targetProject.projectName} 的临时远程仓库时出错：${
-          (cleanupError as Error).message
-        }`
-      );
+      console.error(`清理项目 ${targetProject.projectName} 的临时远程仓库时出错：${(cleanupError as Error).message}`);
     }
   }
 
   console.log(`\n=== 代码同步完成 ===`);
   console.log(`✅ 已完成所有目标项目的代码同步。`);
   console.log(`\n注意事项：`);
-  console.log(`1. porter 只负责代码的同步，不负责 git commit 和推送远程分支。`);
+  console.log(`1. porter-ci 只负责代码的同步，不负责 git commit 和推送远程分支。`);
   console.log(`2. 请在目标项目中手动确认代码是否正确。`);
   console.log(`3. 确认无误后，请执行 git commit 和 git push 完成代码提交。`);
   console.log(`==============================================`);
-  console.log(`\n感谢使用 porter！\n`);
+  console.log(`\n感谢使用 porter-ci！\n`);
   console.log(`==============================================`);
 }

@@ -1,5 +1,5 @@
-import path from "node:path";
-import fsSync from "node:fs";
+import path from 'node:path';
+import fsSync from 'node:fs';
 import {
   getProjectName,
   getCurrentBranch,
@@ -7,8 +7,8 @@ import {
   checkBranchExists,
   executeGitCommandInDir,
   hasUnstagedChanges,
-} from "../utils/git";
-import { GitCommit, ProjectInfo, TargetProject } from "../types";
+} from '../utils/git';
+import { GitCommit, ProjectInfo, TargetProject } from '../types';
 
 /**
  * 解析Git提交记录
@@ -17,12 +17,12 @@ import { GitCommit, ProjectInfo, TargetProject } from "../types";
  */
 function parseCommits(commitLines: string[]): GitCommit[] {
   return commitLines.map((line) => {
-    const [id, ...messageParts] = line.split(" ");
+    const [id, ...messageParts] = line.split(' ');
     return {
       id,
-      message: messageParts.join(" "),
-      author: "",
-      date: "",
+      message: messageParts.join(' '),
+      author: '',
+      date: '',
     };
   });
 }
@@ -48,10 +48,7 @@ export async function readProjectInfo(
     const commitLines: string[] = [];
     for (const commitId of sinceCommit) {
       // 使用git log获取单个commit的信息
-      const commitInfo = executeGitCommandInDir(
-        `log -1 --format="%H %s" ${commitId}`,
-        projectPath
-      );
+      const commitInfo = executeGitCommandInDir(`log -1 --format="%H %s" ${commitId}`, projectPath);
       if (commitInfo) {
         commitLines.push(commitInfo);
       }
@@ -77,9 +74,7 @@ export async function readProjectInfo(
  */
 export function checkForNewCommits(commits: GitCommit[]): void {
   if (commits.length === 0) {
-    throw new Error(
-      "源项目分支自创建以来没有新增的提交，请先提交代码后再使用porter工具。"
-    );
+    throw new Error('源项目分支自创建以来没有新增的提交，请先提交代码后再使用porter-ci工具。');
   }
 }
 
@@ -89,14 +84,12 @@ export function checkForNewCommits(commits: GitCommit[]): void {
  * @throws 如果分支名称不符合规范则抛出错误
  */
 export function checkBranchName(branch: string): void {
-  const forbiddenKeywords = ["master", "test"];
+  const forbiddenKeywords = ['master', 'test'];
   const lowerBranch = branch.toLowerCase();
 
   for (const keyword of forbiddenKeywords) {
     if (lowerBranch.includes(keyword)) {
-      throw new Error(
-        `分支名称不能包含"${keyword}"关键字，请使用其他分支名称。`
-      );
+      throw new Error(`分支名称不能包含"${keyword}"关键字，请使用其他分支名称。`);
     }
   }
 }
@@ -109,9 +102,7 @@ export function checkBranchName(branch: string): void {
 export function checkTargetProjectExists(targetProject: TargetProject): void {
   try {
     const { projectPath } = targetProject;
-    const absolutePath = path.isAbsolute(projectPath)
-      ? projectPath
-      : path.resolve(process.cwd(), projectPath);
+    const absolutePath = path.isAbsolute(projectPath) ? projectPath : path.resolve(process.cwd(), projectPath);
 
     // 检查目录是否存在
     if (!fsSync.existsSync(absolutePath)) {
@@ -119,11 +110,9 @@ export function checkTargetProjectExists(targetProject: TargetProject): void {
     }
 
     // 检查是否是Git仓库
-    executeGitCommandInDir("rev-parse --is-inside-work-tree", absolutePath);
+    executeGitCommandInDir('rev-parse --is-inside-work-tree', absolutePath);
   } catch (error) {
-    throw new Error(
-      `目标项目"${targetProject.projectName}"不存在或不是有效的Git仓库：${targetProject.projectPath}`
-    );
+    throw new Error(`目标项目"${targetProject.projectName}"不存在或不是有效的Git仓库：${targetProject.projectPath}`);
   }
 }
 
@@ -141,9 +130,7 @@ export function checkTargetBranchName(targetProject: TargetProject): void {
  * @param targetProjects 目标项目列表
  * @throws 如果任何一个项目检查失败则抛出错误
  */
-export async function checkAllTargetProjects(
-  targetProjects: TargetProject[]
-): Promise<void> {
+export async function checkAllTargetProjects(targetProjects: TargetProject[]): Promise<void> {
   for (const project of targetProjects) {
     console.log(`\n检查目标项目: ${project.projectName}`);
 
@@ -163,9 +150,7 @@ export async function checkAllTargetProjects(
     // 直接检查分支是否存在，不存在则抛出错误
     const branchExists = checkBranchExists(project.projectPath, project.branch);
     if (!branchExists) {
-      throw new Error(
-        `目标项目"${project.projectName}"的分支"${project.branch}"不存在，请先创建分支。`
-      );
+      throw new Error(`目标项目"${project.projectName}"的分支"${project.branch}"不存在，请先创建分支。`);
     }
     console.log(`✅ 项目"${project.projectName}"分支"${project.branch}"存在`);
 
@@ -173,9 +158,7 @@ export async function checkAllTargetProjects(
     try {
       // 切换到目标项目的指定分支
       executeGitCommandInDir(`checkout ${project.branch}`, project.projectPath);
-      console.log(
-        `✅ 已切换到项目"${project.projectName}"的分支"${project.branch}"`
-      );
+      console.log(`✅ 已切换到项目"${project.projectName}"的分支"${project.branch}"`);
 
       // 检查是否有未暂存的变更
       const unstagedChanges = hasUnstagedChanges(project.projectPath);
@@ -184,14 +167,12 @@ export async function checkAllTargetProjects(
           `目标项目"${project.projectName}"的分支"${project.branch}"存在未暂存的变更，请先执行git add或git stash命令。`
         );
       }
-      console.log(
-        `✅ 项目"${project.projectName}"分支"${project.branch}"没有未暂存的变更`
-      );
+      console.log(`✅ 项目"${project.projectName}"分支"${project.branch}"没有未暂存的变更`);
     } catch (error) {
       // 如果切换分支时出错（比如有未暂存变更），重新抛出更明确的错误
       if (
-        (error as Error).message.includes("Your local changes") ||
-        (error as Error).message.includes("unstaged changes")
+        (error as Error).message.includes('Your local changes') ||
+        (error as Error).message.includes('unstaged changes')
       ) {
         throw new Error(
           `目标项目"${project.projectName}"的分支"${project.branch}"存在未暂存的变更，请先执行git add或git stash命令后再继续。`
@@ -210,9 +191,7 @@ export async function checkAllTargetProjects(
  */
 export function checkSourceProjectExists(projectPath: string): void {
   try {
-    const absolutePath = path.isAbsolute(projectPath)
-      ? projectPath
-      : path.resolve(process.cwd(), projectPath);
+    const absolutePath = path.isAbsolute(projectPath) ? projectPath : path.resolve(process.cwd(), projectPath);
 
     // 检查目录是否存在
     if (!fsSync.existsSync(absolutePath)) {
@@ -220,7 +199,7 @@ export function checkSourceProjectExists(projectPath: string): void {
     }
 
     // 检查是否是Git仓库
-    executeGitCommandInDir("rev-parse --is-inside-work-tree", absolutePath);
+    executeGitCommandInDir('rev-parse --is-inside-work-tree', absolutePath);
   } catch (error) {
     throw new Error(`源项目不存在或不是有效的Git仓库：${projectPath}`);
   }
@@ -232,10 +211,7 @@ export function checkSourceProjectExists(projectPath: string): void {
  * @param branch 源项目分支名称
  * @throws 如果源项目分支不存在则立即抛出错误
  */
-export function checkSourceBranchExists(
-  projectPath: string,
-  branch: string
-): void {
+export function checkSourceBranchExists(projectPath: string, branch: string): void {
   const branchExists = checkBranchExists(projectPath, branch);
   if (!branchExists) {
     throw new Error(`源项目的分支"${branch}"不存在，请先创建分支。`);
