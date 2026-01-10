@@ -1,6 +1,6 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { PorterConfig, TargetProject } from "../types";
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { PorterConfig, TargetProject } from '../types';
 
 let configFilePath: string | null = null;
 
@@ -20,7 +20,7 @@ export function getConfigFilePath(): string {
   if (configFilePath) {
     return configFilePath;
   }
-  return path.join(process.cwd(), "porter.config.json");
+  return path.join(process.cwd(), 'porter-ci.config.json');
 }
 
 /**
@@ -31,13 +31,11 @@ export function getConfigFilePath(): string {
 export async function readConfigFile(): Promise<PorterConfig> {
   const filePath = getConfigFilePath();
   try {
-    const content = await fs.readFile(filePath, "utf-8");
+    const content = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(content) as PorterConfig;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      throw new Error(
-        `配置文件不存在：${filePath}\n请创建 "porter.config.json" 文件。`
-      );
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      throw new Error(`配置文件不存在：${filePath}\n请创建 "porter-ci.config.json" 文件。`);
     }
     throw new Error(`配置文件格式错误：${(error as Error).message}`);
   }
@@ -50,19 +48,19 @@ export async function readConfigFile(): Promise<PorterConfig> {
  */
 export function validateConfigStructure(config: PorterConfig): void {
   if (!config.projectPath) {
-    throw new Error("配置文件缺少必要字段：projectPath（源项目目录路径）");
+    throw new Error('配置文件缺少必要字段：projectPath（源项目目录路径）');
   }
 
   if (!config.projectName) {
-    throw new Error("配置文件缺少必要字段：projectName（源项目名称）");
+    throw new Error('配置文件缺少必要字段：projectName（源项目名称）');
   }
 
   if (!config.targetProjects || !Array.isArray(config.targetProjects)) {
-    throw new Error("配置文件缺少必要字段：targetProjects");
+    throw new Error('配置文件缺少必要字段：targetProjects');
   }
 
   if (config.targetProjects.length === 0) {
-    throw new Error("配置文件中的 targetProjects 不能为空数组");
+    throw new Error('配置文件中的 targetProjects 不能为空数组');
   }
 }
 
@@ -74,11 +72,11 @@ export function validateConfigStructure(config: PorterConfig): void {
 export function validateTargetProjects(targetProjects: TargetProject[]): void {
   for (const project of targetProjects) {
     if (!project.projectName) {
-      throw new Error("目标项目缺少必要字段：projectName");
+      throw new Error('目标项目缺少必要字段：projectName');
     }
 
     if (!project.projectPath) {
-      throw new Error("目标项目缺少必要字段：projectPath");
+      throw new Error('目标项目缺少必要字段：projectPath');
     }
   }
 }
@@ -90,22 +88,22 @@ export function validateTargetProjects(targetProjects: TargetProject[]): void {
  */
 export function validateConfigContent(config: PorterConfig): void {
   // 验证 commit-id 字段
-  if (config["commit-id"]) {
-    const commitId = config["commit-id"];
+  if (config['commit-id']) {
+    const commitId = config['commit-id'];
     if (Array.isArray(commitId)) {
       // 验证数组中的每个元素都是非空字符串
       for (const id of commitId) {
-        if (typeof id !== "string" || !id.trim()) {
-          throw new Error("配置文件中commit-id数组的每个元素必须是非空字符串");
+        if (typeof id !== 'string' || !id.trim()) {
+          throw new Error('配置文件中commit-id数组的每个元素必须是非空字符串');
         }
       }
       // 验证数组长度至少为1
       if (commitId.length === 0) {
-        throw new Error("配置文件中commit-id数组不能为空");
+        throw new Error('配置文件中commit-id数组不能为空');
       }
-    } else if (typeof commitId !== "string" || !commitId.trim()) {
+    } else if (typeof commitId !== 'string' || !commitId.trim()) {
       // 验证字符串类型的commit-id
-      throw new Error("配置文件中commit-id必须是非空字符串或非空字符串数组");
+      throw new Error('配置文件中commit-id必须是非空字符串或非空字符串数组');
     }
   }
 }
@@ -141,10 +139,10 @@ export async function createDefaultConfig(projectPath: string): Promise<void> {
   // 获取当前模块所在目录，确保模板文件路径正确
   const __filename = new URL(import.meta.url).pathname;
   const __dirname = path.dirname(__filename);
-  const templatePath = path.join(__dirname, "../template/porter.config.json");
+  const templatePath = path.join(__dirname, '../template/porter-ci.config.json');
   let templateContent;
   try {
-    templateContent = await fs.readFile(templatePath, "utf-8");
+    templateContent = await fs.readFile(templatePath, 'utf-8');
   } catch (error) {
     throw new Error(`读取模板文件失败：${(error as Error).message}`);
   }
@@ -155,13 +153,9 @@ export async function createDefaultConfig(projectPath: string): Promise<void> {
 
   const filePath = getConfigFilePath();
   try {
-    await fs.writeFile(
-      filePath,
-      JSON.stringify(defaultConfig, null, 2),
-      "utf-8"
-    );
+    await fs.writeFile(filePath, JSON.stringify(defaultConfig, null, 2), 'utf-8');
     console.log(`默认配置文件已创建：${filePath}`);
-    console.log("请编辑该文件并添加正确的项目配置。");
+    console.log('请编辑该文件并添加正确的项目配置。');
   } catch (error) {
     throw new Error(`创建默认配置文件失败：${(error as Error).message}`);
   }
