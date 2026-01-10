@@ -1,10 +1,32 @@
 {
-  "name": "porter",
+  "name": "porter-ci",
   "version": "1.0.0",
   "description": "基于git实现跨项目代码功能同步的CI工具",
+  "keywords": [
+    "porter-ci",
+    "ci",
+    "code-sync",
+    "git",
+    "cross-project"
+  ],
+  "author": {
+    "name": "tobyDing",
+    "email": "tianchengding1314@163.com",
+    "url": "https://github.com/tobyDing"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "bugs": {
+    "url": "https://github.com/tobyDing/porter-ci/issues"
+  },
+  "homepage": "https://github.com/tobyDing/porter-ci#readme",
+  "license": "MIT",
   "type": "module",
   "bin": {
-    "porter": "dist/index.js"
+    "porter-ci": "dist/index.js"
   },
   "scripts": {
     "start": "npm run build && node dist/index.js",
