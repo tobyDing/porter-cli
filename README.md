@@ -166,12 +166,6 @@ porter-ci             # 运行代码同步
 如果你遇到任何问题或有改进建议，请在 GitHub Issues 中提出：
 [https://github.com/tobyDing/porter-ci/issues](https://github.com/tobyDing/porter-ci/issues)
 
-## 版本历史
+## LICENSE
 
-### v1.0.0 (2026-01-10)
-
-- 初始版本
-- 支持跨项目代码同步
-- 基于 Git 追踪变更
-- 支持多个目标项目
-- 友好的命令行界面
+[MIT](./LICENSE)
