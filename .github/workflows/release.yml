@@ -46,13 +46,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          body: ${{ steps.changelog.outputs.changelog }}
+          body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          npx conventional-changelog -p angular -i CHANGELOG.md -s -r 0
-          CHANGELOG=$(git show HEAD:CHANGELOG.md)
-          echo "::set-output name=changelog::$CHANGELOG"
