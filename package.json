@@ -1,0 +1,75 @@
+{
+  "name": "porter-ci",
+  "version": "1.0.0-beta1",
+  "description": "基于git实现跨项目代码功能同步的CI工具",
+  "keywords": [
+    "porter-ci",
+    "ci",
+    "code-sync",
+    "git",
+    "cross-project"
+  ],
+  "author": {
+    "name": "tobyDing",
+    "email": "tianchengding1314@163.com",
+    "url": "https://github.com/tobyDing"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tobyDing/porter-ci.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tobyDing/porter-ci/issues"
+  },
+  "homepage": "https://github.com/tobyDing/porter-ci#readme",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "porter-ci": "dist/index.js"
+  },
+  "packageManager": "pnpm@8.15.4",
+  "scripts": {
+    "start": "npm run build && node dist/index.js",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky install",
+    "release": "release-it"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "inquirer": "^9.2.15"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.8.1",
+    "@commitlint/config-conventional": "^17.8.1",
+    "@release-it/conventional-changelog": "^10.0.4",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "eslint": "^7.32.0",
+    "husky": "^7.0.4",
+    "lint-staged": "^9.0.2",
+    "prettier": "^2.5.1",
+    "release-it": "^19.2.3",
+    "typescript": "^4.4.4",
+    "vite": "^5.0.11"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}
