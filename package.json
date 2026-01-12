@@ -1,6 +1,6 @@
 {
   "name": "@tobyding/porter-cli",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "基于git实现跨项目代码功能同步的CI工具",
   "keywords": [
     "@tobyding/porter-cli",
