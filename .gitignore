@@ -12,4 +12,4 @@ dist-ssr
 *.swp
 *.swo
 .DS_Store
-.porter-cli.config.json
+porter-cli.config.json

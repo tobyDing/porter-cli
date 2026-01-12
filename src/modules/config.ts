@@ -139,13 +139,34 @@ export async function createDefaultConfig(projectPath: string): Promise<void> {
   // 获取当前模块所在目录，确保模板文件路径正确
   const __filename = new URL(import.meta.url).pathname;
   const __dirname = path.dirname(__filename);
-  const templatePath = path.join(__dirname, '../template/porter-cli.config.json');
+
+  // 创建可能的模板文件路径列表
+  const possiblePaths = [
+    // 从src运行时的路径
+    path.join(__dirname, '../template/porter-cli.config.json'),
+    // 从dist运行时的路径
+    path.join(__dirname, 'template/porter-cli.config.json'),
+    // 另一种从dist运行时的可能路径
+    path.join(process.cwd(), '../dist/template/porter-cli.config.json'),
+  ];
+
+  // 尝试从所有可能的路径中读取模板文件
   let templateContent;
-  try {
-    templateContent = await fs.readFile(templatePath, 'utf-8');
-  } catch (error) {
-    throw new Error(`读取模板文件失败：${(error as Error).message}`);
+  let foundPath;
+  for (const possiblePath of possiblePaths) {
+    try {
+      templateContent = await fs.readFile(possiblePath, 'utf-8');
+      foundPath = possiblePath;
+      break;
+    } catch {
+      continue;
+    }
   }
+
+  if (!templateContent) {
+    throw new Error(`无法找到模板文件，已尝试以下路径：\n${possiblePaths.join('\n')}`);
+  }
+  console.log(`使用模板文件：${foundPath}`);
 
   // 解析模板内容并替换projectPath
   const defaultConfig = JSON.parse(templateContent);
