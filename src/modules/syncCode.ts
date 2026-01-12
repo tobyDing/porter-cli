@@ -324,10 +324,10 @@ export async function syncCode(projectInfo: ProjectInfo, config: PorterConfig): 
   console.log(`\n=== 代码同步完成 ===`);
   console.log(`✅ 已完成所有目标项目的代码同步。`);
   console.log(`\n注意事项：`);
-  console.log(`1. porter-ci 只负责代码的同步，不负责 git commit 和推送远程分支。`);
+  console.log(`1. porter-cli 只负责代码的同步，不负责 git commit 和推送远程分支。`);
   console.log(`2. 请在目标项目中手动确认代码是否正确。`);
   console.log(`3. 确认无误后，请执行 git commit 和 git push 完成代码提交。`);
   console.log(`==============================================`);
-  console.log(`\n感谢使用 porter-ci！\n`);
+  console.log(`\n感谢使用 porter-cli！\n`);
   console.log(`==============================================`);
 }
