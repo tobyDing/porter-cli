@@ -27,7 +27,7 @@ porter-cli 是一个强大的命令行工具，用于在不同项目之间同步
 ### 全局安装
 
 ```bash
-npm install -g porter-cli
+npm install -g @tobyding/porter-cli
 ```
 
 ### 本地安装
@@ -35,7 +35,7 @@ npm install -g porter-cli
 ```bash
 # 克隆仓库
 git clone https://github.com/tobyDing/porter-ci.git
-cd porter-ci
+cd @tobyding/porter-cli
 
 # 安装依赖
 pnpm install
