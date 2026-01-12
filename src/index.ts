@@ -20,7 +20,7 @@ import inquirer from 'inquirer';
  * @returns 配置文件路径，如果未找到则返回null
  */
 async function findConfigFile(): Promise<string | null> {
-  const possiblePaths = ['porter-ci.config.json', path.join(process.cwd(), 'porter-ci.config.json')];
+  const possiblePaths = ['porter-cli.config.json', path.join(process.cwd(), 'porter-cli.config.json')];
 
   for (const configPath of possiblePaths) {
     try {
@@ -59,7 +59,7 @@ async function initCLI() {
 
   // 设置帮助信息
   program
-    .name('porter-ci')
+    .name('porter-cli')
     .description('基于git实现跨项目代码功能同步的CI工具')
     .helpOption('-h, --help', '查看帮助信息');
 
@@ -92,7 +92,7 @@ async function main() {
     const configPath = await findConfigFile();
 
     if (!configPath) {
-      console.log('未找到配置文件 porter-ci.config.json');
+      console.log('未找到配置文件 porter-cli.config.json');
       console.log('请在当前目录或指定路径创建配置文件。');
       const shouldCreate = await askToCreateConfig();
       if (shouldCreate) {

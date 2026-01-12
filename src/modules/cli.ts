@@ -23,7 +23,7 @@ export function showWelcome(): void {
   const packageJson = getPackageConfig();
 
   console.log('=============================================');
-  console.log('          欢迎来到porter-ci的世界！         ');
+  console.log('          欢迎来到porter-cli的世界！         ');
   console.log(`  ${packageJson.description}`);
   console.log('=============================================');
   console.log('\n');
@@ -91,5 +91,5 @@ export async function askToStartSync(): Promise<boolean> {
  */
 export async function handleConfigCreation(projectPath: string): Promise<void> {
   await createDefaultConfig(projectPath);
-  console.log('配置文件已创建，请编辑后重新运行porter-ci工具。');
+  console.log('配置文件已创建，请编辑后重新运行porter-cli工具。');
 }
