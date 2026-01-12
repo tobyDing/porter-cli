@@ -74,7 +74,7 @@ export async function readProjectInfo(
  */
 export function checkForNewCommits(commits: GitCommit[]): void {
   if (commits.length === 0) {
-    throw new Error('源项目分支自创建以来没有新增的提交，请先提交代码后再使用porter-ci工具。');
+    throw new Error('源项目分支自创建以来没有新增的提交，请先提交代码后再使用porter-cli工具。');
   }
 }
 

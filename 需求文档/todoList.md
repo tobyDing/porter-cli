@@ -10,7 +10,7 @@
 - [x] v1.0.0 某一步骤失败后，需要删除临时远程仓库
 - [x] v1.0.0 支持短 commit-id（如 e3c7118）的识别和同步
 - [x] v1.0.0 支持自定义同步提交列表，即配置信息 commit-id 字段是数组时，每个元素都是一个 commit-id，同步代码的时候仅同步此处指定的提交
-- [x] v1.0.0 丰富 porter-ci 命令行，支持 `porter-ci -v` 查看版本号、 `porter-ci -h` 查看帮助命令
+- [x] v1.0.0 丰富 porter-cli 命令行，支持 `porter-cli -v` 查看版本号、 `porter-cli -h` 查看帮助命令
 
 ### 未来规划
 

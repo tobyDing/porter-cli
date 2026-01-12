@@ -20,7 +20,7 @@ export function getConfigFilePath(): string {
   if (configFilePath) {
     return configFilePath;
   }
-  return path.join(process.cwd(), 'porter-ci.config.json');
+  return path.join(process.cwd(), 'porter-cli.config.json');
 }
 
 /**
@@ -35,7 +35,7 @@ export async function readConfigFile(): Promise<PorterConfig> {
     return JSON.parse(content) as PorterConfig;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      throw new Error(`配置文件不存在：${filePath}\n请创建 "porter-ci.config.json" 文件。`);
+      throw new Error(`配置文件不存在：${filePath}\n请创建 "porter-cli.config.json" 文件。`);
     }
     throw new Error(`配置文件格式错误：${(error as Error).message}`);
   }
@@ -139,7 +139,7 @@ export async function createDefaultConfig(projectPath: string): Promise<void> {
   // 获取当前模块所在目录，确保模板文件路径正确
   const __filename = new URL(import.meta.url).pathname;
   const __dirname = path.dirname(__filename);
-  const templatePath = path.join(__dirname, '../template/porter-ci.config.json');
+  const templatePath = path.join(__dirname, '../template/porter-cli.config.json');
   let templateContent;
   try {
     templateContent = await fs.readFile(templatePath, 'utf-8');
