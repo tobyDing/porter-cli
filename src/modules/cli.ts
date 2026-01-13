@@ -9,10 +9,17 @@ import { resolve } from 'node:path';
  * @returns package.json配置对象
  */
 export function getPackageConfig(): Record<string, any> {
-  // 使用process.cwd()获取当前工作目录，确保能正确找到根目录的package.json
-  const packageJsonPath = resolve(process.cwd(), 'package.json');
-  const packageJsonContent = readFileSync(packageJsonPath, 'utf-8');
-  return JSON.parse(packageJsonContent);
+  try {
+    // 尝试从当前目录读取package.json
+    const packageJsonPath = resolve(process.cwd(), 'package.json');
+    const packageJsonContent = readFileSync(packageJsonPath, 'utf-8');
+    return JSON.parse(packageJsonContent);
+  } catch {
+    // 如果找不到，返回默认配置
+    return {
+      description: '基于git实现跨项目代码功能同步的CI工具',
+    };
+  }
 }
 
 /**

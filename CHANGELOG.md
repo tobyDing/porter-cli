@@ -1,10 +1,17 @@
 # Changelog
 
-# 1.1.0 (2026-01-12)
+## [1.1.1](https://github.com/tobyDing/porter-cli/compare/v1.1.0...v1.1.1) (2026-01-12)
 
 
 ### Bug Fixes
 
+* 修复生成模板文件问题 ([d45c0de](https://github.com/tobyDing/porter-cli/commit/d45c0de98f91fd3a415f2d912bbe41557254f8dc))
+
+# 1.1.0 (2026-01-12)
+
+
+### Bug Fixes
+ master
 * 修复 ts 配置问题 ([e1ceb82](https://github.com/tobyDing/porter-cli/commit/e1ceb823c4df3b5ab1db23e2d59ae1f062460582))
 
 

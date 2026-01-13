@@ -1,6 +1,6 @@
 {
   "name": "@tobyding/porter-cli",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "基于git实现跨项目代码功能同步的CI工具",
   "keywords": [
     "@tobyding/porter-cli",
@@ -60,8 +60,10 @@
     "lint-staged": "^9.0.2",
     "prettier": "^2.5.1",
     "release-it": "^19.2.3",
+    "tsx": "^4.21.0",
     "typescript": "^4.4.4",
-    "vite": "^5.0.11"
+    "vite": "^5.0.11",
+    "vite-plugin-static-copy": "^3.1.4"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
