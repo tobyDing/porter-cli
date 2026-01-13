@@ -11,7 +11,7 @@
 
 
 ### Bug Fixes
-
+ master
 * 修复 ts 配置问题 ([e1ceb82](https://github.com/tobyDing/porter-cli/commit/e1ceb823c4df3b5ab1db23e2d59ae1f062460582))
 
 
